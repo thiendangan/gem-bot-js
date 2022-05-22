@@ -334,11 +334,15 @@ class Grid {
         return false;
     }
 
+    getNumberOfGemByType(type) {
+        this.gems.filter(gem => gem.type == type).length;
+    }
+
     clone() {
         const cloned = new Grid({ size: () => 0 }, new Set());
         cloned.gems = this.gems.map(gem => gem.clone());
         cloned.gemTypes = new Set(Array.from(this.gemTypes));
-        this.myHeroGemType = new Set(Array.from(this.myHeroGemType));
+        this.myHeroGemType = this.myHeroGemType ? new Set(Array.from(this.myHeroGemType)) : new Set();
         return cloned;
     }
 }

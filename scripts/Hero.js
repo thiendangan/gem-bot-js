@@ -51,6 +51,13 @@ class Hero {
         this.maxMana = objHero.getInt("maxMana");
     }
 
+    updateHeroLocal(objHero) {
+        this.attack = objHero.attack;
+        this.hp = objHero.hp;
+        this.mana = objHero.mana;
+        this.maxMana = objHero.maxMana;
+    }
+
     isAlive() {
         return this.hp > 0;
     }
