@@ -16,8 +16,8 @@ class AotGameState {
 
   switchTurn() {
     const { enemyPlayer, botPlayer } = this;
-    this.botPlayer = enemyPlayer;
-    this.enemyPlayer = botPlayer;
+    this.botPlayer = enemyPlayer.clone();
+    this.enemyPlayer = botPlayer.clone();
   }
 
   getCurrentPlayer() {
@@ -75,6 +75,12 @@ class BaseSkill {
 
   applySkill(state) {
     // todo apply skill logic
+    // should remove
+    // other case for skill
+
+  }
+  getTarget(posibleSkillCasts, state) {
+    return { skillScore: 1, targetId: null};
   }
 
   takeDamgeEnemies(state, attack, numOfEnemies = 10) {
@@ -133,8 +139,18 @@ class MONK_SKILL extends BaseSkill {
   }
   
   getScore(state) {
-    const enemyHeroAlive = state.getCurrentPlayer().getHerosAlive();
-    return 8 * enemyHeroAlive.length;
+    const heroAlive = state.getCurrentPlayer().getHerosAlive();
+    const moreValue = heroAlive[0].attack < 14 ? 500 : 0;
+    return 8 * heroAlive.length + moreValue;
+  }
+
+  getTarget(state) {// priority 1 -> 10
+    const heroAlive = state.getCurrentPlayer().getHerosAlive();
+    const skillScore = 1;
+    if (heroAlive[0].attack < 14) {
+      skillScore += 10;// max priority
+    }
+    return { skillScore, targetId: null};
   }
 }
 class AIR_SPIRIT_SKILL extends BaseSkill {
@@ -187,7 +203,6 @@ class MERMAID_SKILL extends BaseSkill {
   }
 }
 class SEA_SPIRIT_SKILL extends BaseSkill {
-
   applySkill(state) {
     // "Focus
     // Increase [An allied hero]'s Attack and Health by 5 Hp. Gain an extra turn."
@@ -213,11 +228,30 @@ class FIRE_SPIRIT_SKILL extends BaseSkill {
   }
   
   getScore(state) {
-    const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
+    const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();// todo taget
     let currentRedGem = state.grid.getNumberOfGemByType(GemType.RED);
     let attack = this.hero.attack + currentRedGem;
     
     return attack * enemyHeroAlive.length;
+  }
+  getTarget(posibleSkillCasts, state) {
+    const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();// todo taget
+    const attackBuff = ['MONK', 'SEA_SPIRIT'];
+    let shouldKill = null;
+    for (const item of enemyHeroAlive) {
+      if (attackBuff.indexOf(item.id) > -1) {
+        return { targetId: item.id };
+      }
+      const attack = item.attack + state.grid.getNumberOfGemByType(GemType.RED);
+      if (item.hp <= attack && (shouldKill == null || shouldKill.hp < item.hp)) {
+        // should kill
+        shouldKill = item;
+      }
+    }
+    // uu tien kill
+    shouldKill = shouldKill ? shouldKill : enemyHeroAlive[0];
+
+    return { targetId: shouldKill.id };
   }
 }
 class CERBERUS_SKILL extends BaseSkill {
@@ -352,7 +386,9 @@ class GameSimulator {
 
     for (const batch of result) {
       if (batch.isExtraTurn) {
+        loginfo('th3: batch.isExtraTurn', batch.isExtraTurn)
         this.state.isExtraTurn = true;
+        this.hasExtraTurn = true;
       }
 
       for (const gem of batch.removedGems) {
@@ -368,15 +404,6 @@ class GameSimulator {
       }
     }
     this.applyTurnEffect(this.turnEffect);
-    this.hasExtraTurn = false;
-    for(const item of result) {
-      if(item.isExtraTurn){
-    loginfo('th3: hasExtraTurn', result);
-
-        this.hasExtraTurn = true;
-        break;
-      }
-    }
     this.state.addDistinction(result);
   }
 
@@ -414,9 +441,9 @@ class GameSimulator {
   }
 
   applyCastSkill(move) {
-    loginfo('applyCastSkill', move);
+    loginfo('th3: applyCastSkill', move);
     // cacl damage take 
-    move.skill.applySkill(this.state);
+    // move.skill.applySkill(this.state);
   }
 }
 
@@ -430,8 +457,9 @@ class AotScoreMetric {
   overManaMetric = new LinearScale(-1, 0);
 
   caclcHeroManaScore(hero, state) {
-    const skill = SkillFactory.getSkillByHero(hero);
-    return (hero.mana/hero.maxMana) * skill.getScore(state);
+    const skillScore = SkillFactory.getSkillByHero(hero).getScore(state);
+    loginfo('th3: skillScore', hero.id, skillScore);
+    return (hero.mana + 1) * skillScore;
   }
   caclcHeroScore(hero, state) {
     const hpScore = this.hpMetric.exec(hero.hp);// 1. hp nhieu score nhieu
@@ -441,7 +469,7 @@ class AotScoreMetric {
     const attackScore = this.attackMetric.exec(hero.attack > 15 ? 15 : hero.attack);
     // 3. attack cao thi score cao, 
     // 
-    loginfo('th3: manaScore', manaScore)
+    loginfo('th3: HeroScore', {hpScore, manaScore, overManaScore, attackScore})
     const heroScore = this.sumMetric.exec(
       hpScore, manaScore, overManaScore, attackScore);
     
@@ -461,9 +489,10 @@ class AotScoreMetric {
 
   calc(state) {
     const extraScore = this.calcExtraScore(state);
-    loginfo('th3: extraScore', extraScore);
     const myScore = this.calcScoreOfPlayer(state.getCurrentPlayer(), state) + extraScore;
     const enemyScore = this.calcScoreOfPlayer(state.getCurrentEnemyPlayer(), state);
+    loginfo('th3: myScore', extraScore, myScore, enemyScore);
+
     const score = myScore - enemyScore;
     return score;
   }
@@ -484,31 +513,78 @@ class AoTStrategy {
   }
 
   playTurn() {
-    loginfo(`${AoTStrategy.name}: playTurn`);
+    loginfo(`th3: playTurn`);
     const state = this.getCurrentState();
     const action = this.chooseBestPosibleMove(state, 1);
-    loginfo(action);
+    loginfo(`th3: end playTurn`);
     if (action.isCastSkill) {
       loginfo(`${AoTStrategy.name}: isCastSkill`);
-      this.castSkillHandle(action.hero);
+      this.castSkillHandle(action.hero, action.targetId);// ytodo cast with target
     } else if (action.isSwap) {
       loginfo(`${AoTStrategy.name}: isSwap`);
       this.swapGemHandle(action.swap);
     }
+    loginfo(`th3: end all playTurn`);
   }
 
   getCurrentState() {
     // loginfo(`${AoTStrategy.name}: getCurrentState`);
     return this.state.clone();
   }
+  getSkillShouldCast(posibleSkillCasts, state) {
+    let skill = null;
+    for (const move of posibleSkillCasts) {
+      skill = move;
+      if (['MONK'].indexOf(move.hero.id) > -1) {
+        return move;
+      }
+      if (['FIRE_SPIRIT'].indexOf(move.hero.id) > -1) {
+        const { targetId } = move.skill.getTarget(posibleSkillCasts, state);
+        move.targetId = targetId;
+        return move;
+      }
+      // const { skillScore, targetId } = move.skill.getScoreAndTarget(state, posibleGemSwaps);
+      // if (skillScore > bestScore) {
+      //   bestScore = skillScore;
+      //   skill = move;
+      //   move.targetId = targetId;
+      // }
+    }
 
+    return skill;
+  }
   chooseBestPosibleMove(state, deep = 2) {
     // loginfo(`${AoTStrategy.name}: chooseBestPosibleMove`);
-    const posibleMoves = this.getAllPosibleMove(state);
-
-    let currentBestMove = posibleMoves[0];//todo get best
+    // if find hero mana <= attack ==> kill first
+    const posibleGemSwaps = this.getAllPosibleGemSwap(state);
+    const swordType = posibleGemSwaps.filter(gemInfo => gemInfo.swap.type == GemType.SWORD).sort(function(a, b) { 
+      return b.swap.sizeMatch - a.swap.sizeMatch;
+    });
+    if (swordType && swordType.length > 0) {
+      const myHeroAlive = this.state.getCurrentPlayer().firstHeroAlive();
+      const damgeMetric = new AttackDamgeMetric();
+      const attackDame = 1 * damgeMetric.exec(swordType[0].swap.sizeMatch, myHeroAlive);
+      const enemyHeroAlive = this.state.getCurrentEnemyPlayer().firstHeroAlive();
+      loginfo("th3: swordType", swordType, attackDame);
+      if (enemyHeroAlive.hp <= attackDame) {
+        loginfo("th3: case uu tien dung kiem kill");
+        return swordType[0];
+      }
+    }
+    
+    const posibleSkillCasts = this.getAllPosibleSkillCast(state);
+    loginfo(
+      `${AoTStrategy.name}: posibleSkillCasts`, posibleSkillCasts
+    );
+    // priority cast skill// todo case swap better than skill
+    const skill = this.getSkillShouldCast(posibleSkillCasts, state);
+    if (skill) {
+      return skill;
+    }
+    let currentBestMove = posibleGemSwaps[0];//todo get best
     let currentBestMoveScore = -1;
-    for (const move of posibleMoves) {
+    loginfo('th3: posibleMoves', posibleGemSwaps);
+    for (const move of posibleGemSwaps) {
       // loginfo(
       //   `${AoTStrategy.name}: currentBestMove  ${posibleMoves.indexOf(move)}`
       // );
@@ -529,15 +605,17 @@ class AoTStrategy {
       const simulateManaScore = this.compareManaScoreOnStates(state, futureState);
 
       const totalScore = simulateMoveScore + simulateDamageScore + simulateManaScore;
-      loginfo(
-        `th3: simulateMoveScore  ${simulateMoveScore}`
-      );
+      // loginfo(
+      //   `th3: simulateMoveScore  ${simulateMoveScore}`
+      // );
 
       if (simulateMoveScore > currentBestMoveScore) {
         currentBestMove = move;
         currentBestMoveScore = simulateMoveScore;
       }
     }
+    loginfo('th3: end posibleMoves', posibleGemSwaps);
+
     return currentBestMove;
   }
 

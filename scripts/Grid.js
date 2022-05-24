@@ -127,9 +127,8 @@ class Grid {
 
         this.swap(currentGem, swapGem);
 
-
         if (matchGems.size > 0) {
-            listMatchGem.push(new GemSwapInfo(currentGem.index, swapGem.index, matchGems.length, currentGem.type));
+            listMatchGem.push(new GemSwapInfo(currentGem.index, swapGem.index, matchGems.size, currentGem.type, matchGems));
         }
     }
 
@@ -335,7 +334,7 @@ class Grid {
     }
 
     getNumberOfGemByType(type) {
-        this.gems.filter(gem => gem.type == type).length;
+        return this.gems.filter(gem => gem.type == type).length;
     }
 
     clone() {

@@ -34,8 +34,12 @@ var enemyPlayer;
 var currentPlayerId;
 var grid;
 
-const username = "";
-const token = "bot";
+const username = "thien.dang";
+const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzI4MjczNTcxNSwiZXhwIjoxNjU1MDgyNzM1fQ.hcScupwBmebBrdTXUNFwQes1Ba1k91PDdqmJvG2N4GVU2G28YhmTyXBoHIiy7loR6Pw-eLWiMaN9-gm-CiINqA";
+const tokenMap = {
+	"thien.dang": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzI4MjczNTcxNSwiZXhwIjoxNjU1MDgyNzM1fQ.hcScupwBmebBrdTXUNFwQes1Ba1k91PDdqmJvG2N4GVU2G28YhmTyXBoHIiy7loR6Pw-eLWiMaN9-gm-CiINqA",
+	"duy.nguyenvan": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkdXkubmd1eWVudmFuIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzMxNTY4NTc5NywiZXhwIjoxNjU1MTE1Njg1fQ.rnXFlX7rY8AMp6wSWkeyYphl0Ia9eGmD9LtM4gzWmKv8Cp5RWqzQhvZT0XHglrVc9Pe7PTqbZ7Xl6rnJF71sQA"
+};
 var visualizer = new Visualizer({ el: '#visual' });
 var params = window.params;
 var strategy = window.strategy;
@@ -182,12 +186,14 @@ function onLoginBtnClick() {
 
 	let data = new SFS2X.SFSObject();
 	data.putUtfString("BATTLE_MODE", "NORMAL");
-	data.putUtfString("ID_TOKEN", token);
+	data.putUtfString("ID_TOKEN", tokenMap[uName]);
 	data.putUtfString("NICK_NAME", uName);
 
 	var isSent = sfs.send(new SFS2X.LoginRequest(uName, "", data, "gmm"));
 
 	if (isSent) trace("Sent");
+
+	// login for other and save to play together
 }
 
 function onLoginError(event) {
@@ -308,7 +314,9 @@ function AssignPlayers(room) {
 
 	let user1 = users[0];
 
-	let playerId1 = Array.from(user1._playerIdByRoomId).map(([name, value]) => (value))[1];
+	let arrPlayerId1 = Array.from(user1._playerIdByRoomId).map(([name, value]) => (value));
+	let playerId1 = arrPlayerId1.length > 1 ? arrPlayerId1[1] : arrPlayerId1[0];
+
 
 	log("id user1: " + playerId1);
 
@@ -329,7 +337,8 @@ function AssignPlayers(room) {
 
 	let user2 = users[1];
 
-	let playerId2 = Array.from(user2._playerIdByRoomId).map(([name, value]) => (value))[1];
+	let arrPlayerId2 = Array.from(user2._playerIdByRoomId).map(([name, value]) => (value));
+	let playerId2 = arrPlayerId2.length > 1 ? arrPlayerId2[1] : arrPlayerId2[0];
 
 
 	log("id user2: " + playerId2);
@@ -344,8 +353,6 @@ function AssignPlayers(room) {
 		botPlayer = new Player(playerId2, "player" + playerId2);
 		enemyPlayer = new Player(playerId1, "player" + playerId1);
 	}
-
-
 }
 
 function EndGame() {
