@@ -146,7 +146,7 @@ function loginfo(...args) {
         return 10;
     }
   
-    getTarget(state) {// priority 1 -> 10
+    getTarget(posibleSkillCasts, state) {// priority 1 -> 10
       const heroAlive = state.getCurrentPlayer().getHerosAlive();
       const skillScore = 1;
       if (heroAlive[0].attack < 14) {
@@ -525,7 +525,12 @@ function loginfo(...args) {
       loginfo(`th3: end playTurn`);
       if (action.isCastSkill) {
         loginfo(`${FunnyStrategy.name}: isCastSkill`);
-        this.castSkillHandle(action.hero, action.targetId);// ytodo cast with target
+        this.castSkillHandle(action.hero, { 
+          targetId: action.targetId, 
+          selectedGem: action.selectedGem, 
+          gemIndex: action.gemIndex, 
+          // isTargetAllyOrNot: 
+        });// ytodo cast with target
       } else if (action.isSwap) {
         loginfo(`${FunnyStrategy.name}: isSwap`);
         this.swapGemHandle(action.swap);
@@ -566,7 +571,7 @@ function loginfo(...args) {
       return null;
     }
     chooseBestPosibleMove(state, deep = 2) {
-        const posibleGemSwaps = this.getAllPosibleGemSwap(state);
+      const posibleGemSwaps = this.getAllPosibleGemSwap(state);
         // loginfo(`${FunnyStrategy.name}: chooseBestPosibleMove`);
       // gem dac biet uu tien
       const adGem =  posibleGemSwaps.find(gemInfo => gemInfo.swap.hasADGem());
@@ -580,7 +585,7 @@ function loginfo(...args) {
         loginfo("th3: bigGemSize", bigGemSize);
         return bigGemSize;
       }
-      // if find hero mana <= attack ==> kill first
+      // if find hero mana <= attack ==> kill first // skill kill > 1 thi dung skill 
       const swordType = posibleGemSwaps.filter(gemInfo => gemInfo.swap.type == GemType.SWORD).sort(function(a, b) { 
         return b.swap.sizeMatch - a.swap.sizeMatch;
       });
