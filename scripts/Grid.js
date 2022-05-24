@@ -25,7 +25,7 @@ class Grid {
 
             this.gemTypes.add(gem.type);
 
-            // console.log(i + ": " + gem.type)
+            // console.log("th3: gem", gem, gemModifiers)
         }
     }
 

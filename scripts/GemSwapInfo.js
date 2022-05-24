@@ -14,10 +14,15 @@ class GemSwapInfo {
 
     hasADGem() {
         for (let item of Array.from(this.matchGems)) {
-            if (item.modifier > 4) {
+            console.log("th3: itemitem", item);
+            // if (item.modifier > 4) {
+            //     return true;
+            // } else if (item.modifier > 0 && this.matchGems.size > 3) {
+            //     console.log("th3: item.modifier", item.modifier, this.matchGems.size);
+            //     return true;
+            // }
+            if (item.modifier == 5) {
                 return true;
-            } else if (item.modifier > 0) {
-                console.log("th3: item.modifier", item.modifier, item.sizeMatch);
             }
         }
 

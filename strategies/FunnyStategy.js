@@ -93,8 +93,25 @@ function loginfo(...args) {
       }
     }
     
-    increaseAttributeAllies(state, data = {
-      hp: 0, attack: 0
+    updateAttributeEnemies(state, data = {
+      hp: 0, attack: 0, mana: 0
+    }, numOfHero = 10) {
+      let heroLenth = 0;
+      const heroAlives = state.getCurrentEnemyPlayer().getHerosAlive();
+      for (const hero of heroAlives) {
+        heroLenth++;
+        if (heroLenth > numOfHero) break;
+        hero.updateHeroLocal({
+          hp: hero.hp + data.hp,
+          attack: hero.attack + data.attack,
+          mana: hero.mana + data.mana,
+          maxMana: hero.maxMana
+        })
+      }
+    }
+
+    updateAttributeAllies(state, data = {
+      hp: 0, attack: 0, mana: 0
     }, numOfHero = 10) {
       let heroLenth = 0;
       const heroAlives = state.getCurrentPlayer().getHerosAlive();
@@ -104,7 +121,7 @@ function loginfo(...args) {
         hero.updateHeroLocal({
           hp: hero.hp + data.hp,
           attack: hero.attack + data.attack,
-          mana: hero.mana,
+          mana: hero.mana + data.mana,
           maxMana: hero.maxMana
         })
       }
@@ -133,8 +150,8 @@ function loginfo(...args) {
     applySkill(state) {
     // "Bless of Light 
     // Add 8 atttack damage to all Allies"
-      this.increaseAttributeAllies(state, {
-        hp: 0, attack: 8
+      this.updateAttributeAllies(state, {
+        hp: 0, attack: 8, mana: 0
       })
     }
     
@@ -143,7 +160,12 @@ function loginfo(...args) {
         if (!enemyHeroAlive.find(hero => hero.hp > this.hero.attack)) {
             return -500;
         }
-        return 10;
+        if (this.hero.attack < 14) {
+          return 500;
+        }
+        const heroAlive = state.getCurrentPlayer().getHerosAlive();
+
+        return 3 * heroAlive.length;
     }
   
     getTarget(posibleSkillCasts, state) {// priority 1 -> 10
@@ -176,14 +198,14 @@ function loginfo(...args) {
       // Deal damage to all enemies and reduce their mana"
       this.takeDamgeEnemies(state, this.hero.attack);
       // todo: reduce their mana
-      this.increaseAttributeAllies(state, {
-        hp: 1, attack: 0
+      this.updateAttributeEnemies(state, {
+        hp: 0, attack: 0, mana: -1
       })
     }
     
     getScore(state) {
-      const heroAlive = state.getCurrentPlayer().getHerosAlive();
-      return this.hero.hp * heroAlive.length;
+      const heroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
+      return this.hero.attack * heroAlive.length + heroAlive.length * 1;
     }
   }
   class MERMAID_SKILL extends BaseSkill {
@@ -192,7 +214,7 @@ function loginfo(...args) {
       // Deal damage to all enemies based on her current Attack atrribute. Increase her Attack"
       this.takeDamgeEnemies(state, this.hero.attack);
       // todo: Increase her Attack
-      this.increaseAttributeAllies(state, {
+      this.updateAttributeAllies(state, {
         hp: 0, attack: 1
       })
     }
@@ -208,7 +230,7 @@ function loginfo(...args) {
     applySkill(state) {
       // "Focus
       // Increase [An allied hero]'s Attack and Health by 5 Hp. Gain an extra turn."
-      this.increaseAttributeAllies(state, {// todo: should choose right hero base on current attr
+      this.updateAttributeAllies(state, {// todo: should choose right hero base on current attr
         hp: 5, attack: 5
       }, 1)
       // todo: Gain an extra turn.
@@ -230,11 +252,11 @@ function loginfo(...args) {
     }
     
     getScore(state) {
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();// todo taget
       let currentRedGem = state.grid.getNumberOfGemByType(GemType.RED);
-      let attack = this.hero.attack + currentRedGem;
+      const { hero: heroTarget } = this.getTarget(null, state);
+      let attack = heroTarget.attack + currentRedGem;
       
-      return attack * enemyHeroAlive.length;
+      return attack;
     }
     getTarget(posibleSkillCasts, state) {
       const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();// todo taget
@@ -257,7 +279,7 @@ function loginfo(...args) {
       // uu tien kill
       shouldKill = shouldKill ? shouldKill : enemyHeroAlive[0];
   
-      return { targetId: shouldKill.id };
+      return { targetId: shouldKill?.id || 0, hero: shouldKill };
     }
   }
   class CERBERUS_SKILL extends BaseSkill {
@@ -266,7 +288,7 @@ function loginfo(...args) {
       // Deal damage to All enemies and increase it's attack"
       this.takeDamgeEnemies(state, this.hero.attack);
       // todo: Increase her Attack
-      this.increaseAttributeAllies(state, {
+      this.updateAttributeAllies(state, {
         hp: 0, attack: 1
       })
     }
@@ -296,7 +318,7 @@ function loginfo(...args) {
       // todo apply skill logic
       // "Resurection
       // If killed with full mana, respawn with full HP. This skill is passive, automatic active."
-      this.increaseAttributeAllies(state, {
+      this.updateAttributeAllies(state, {
         hp: 10,
         attack: 0
       }, 1);
@@ -312,7 +334,7 @@ function loginfo(...args) {
       // todo apply skill logic
       // "Soul Swap
       // Swap your HP with the target hero's HP (can target heroes on both sides)"
-      this.increaseAttributeAllies(state, {
+      this.updateAttributeAllies(state, {
         hp: 10,
         attack: 0
       }, 1);
@@ -464,8 +486,9 @@ function loginfo(...args) {
   
     caclcHeroManaScore(hero, state) {
       const skillScore = SkillFactory.getSkillByHero(hero).getScore(state);
-      loginfo('th3: skillScore', hero.id, skillScore);
-      return ((hero.mana + 1)/hero.maxMana) * skillScore;
+      // loginfo('th3: skillScore', hero.id, skillScore);
+      // ??? mana = 0
+      return ((hero.mana + 0.1)/(hero.maxMana)) * skillScore;
     }
     caclcHeroScore(hero, state) {
       const hpScore = this.hpMetric.exec(hero.hp);// 1. hp nhieu score nhieu
@@ -475,7 +498,7 @@ function loginfo(...args) {
       const attackScore = this.attackMetric.exec(0);
       // 3. attack cao thi score cao, 
       // 
-      loginfo('th3: HeroScore', {hpScore, manaScore, overManaScore, attackScore})
+      // loginfo('th3: HeroScore', {hpScore, manaScore, overManaScore, attackScore})
       const heroScore = this.sumMetric.exec(
         hpScore, manaScore, overManaScore, attackScore);
       
@@ -483,7 +506,8 @@ function loginfo(...args) {
     }
   
     calcExtraScore(state) {// dont relate to hero
-      return state.isExtraturn() ? 100 : 0;
+      loginfo("th3: state.isExtraturn()", state.isExtraturn())
+      return state.isExtraturn() ? 1000 : 0;
     }
   
     calcScoreOfPlayer(player, state) {
@@ -579,28 +603,28 @@ function loginfo(...args) {
           loginfo("th3: adGem", adGem);
           return adGem;
       }
-      // if bonus turn uu tien
+      // // if bonus turn uu tien
       const bigGemSize = posibleGemSwaps.find(gemInfo => gemInfo.swap.sizeMatch > 4);
       if (bigGemSize) {
         loginfo("th3: bigGemSize", bigGemSize);
         return bigGemSize;
       }
-      // if find hero mana <= attack ==> kill first // skill kill > 1 thi dung skill 
-      const swordType = posibleGemSwaps.filter(gemInfo => gemInfo.swap.type == GemType.SWORD).sort(function(a, b) { 
-        return b.swap.sizeMatch - a.swap.sizeMatch;
-      });
-      //
-      if (swordType && swordType.length > 0) {
-        const myHeroAlive = this.state.getCurrentPlayer().firstHeroAlive();
-        const damgeMetric = new AttackDamgeMetric();
-        const attackDame = 1 * damgeMetric.exec(swordType[0].swap.sizeMatch, myHeroAlive);
-        const enemyHeroAlive = this.state.getCurrentEnemyPlayer().firstHeroAlive();
-        loginfo("th3: swordType", swordType, attackDame);
-        if (enemyHeroAlive.hp <= attackDame) {
-          loginfo("th3: case uu tien dung kiem kill");
-          return swordType[0];
-        }
-      }
+      // // if find hero mana <= attack ==> kill first // skill kill > 1 thi dung skill 
+      // const swordType = posibleGemSwaps.filter(gemInfo => gemInfo.swap.type == GemType.SWORD).sort(function(a, b) { 
+      //   return b.swap.sizeMatch - a.swap.sizeMatch;
+      // });
+      // //
+      // if (swordType && swordType.length > 0) {
+      //   const myHeroAlive = this.state.getCurrentPlayer().firstHeroAlive();
+      //   const damgeMetric = new AttackDamgeMetric();
+      //   const attackDame = 1 * damgeMetric.exec(swordType[0].swap.sizeMatch, myHeroAlive);
+      //   const enemyHeroAlive = this.state.getCurrentEnemyPlayer().firstHeroAlive();
+      //   loginfo("th3: swordType", swordType, attackDame);
+      //   if (enemyHeroAlive.hp <= attackDame) {
+      //     loginfo("th3: case uu tien dung kiem kill");
+      //     return swordType[0];
+      //   }
+      // }
   
       const posibleSkillCasts = this.getAllPosibleSkillCast(state);
       loginfo(
