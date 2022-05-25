@@ -128,7 +128,14 @@ class Grid {
         this.swap(currentGem, swapGem);
 
         if (matchGems.size > 0) {
-            listMatchGem.push(new GemSwapInfo(currentGem.index, swapGem.index, matchGems.size, currentGem.type, matchGems));
+            const maxLinearMatchSize = this.maxLinearMatch(matchGems);
+            let isExtraTurn = maxLinearMatchSize > 4;
+            // truong hop 1 co cai modifier extra
+            if (Array.from(matchGems).find(g => g.modifier == GemModifier.EXTRA_TURN)) {
+                isExtraTurn = true;
+            }
+
+            listMatchGem.push(new GemSwapInfo(currentGem.index, swapGem.index, matchGems.size, currentGem.type, matchGems, isExtraTurn));
         }
     }
 
@@ -227,6 +234,36 @@ class Grid {
             yAbove++;
         }
         if (ver.length >= 3) ver.forEach(gem => res.add(gem));
+        // check modifiers
+        // GemModifier.EXTRA_TURN
+        // EXTRA_TURN: 5,
+        const resArray = Array.from(res);
+        for (const item of resArray) {
+            if (item.modifier == GemModifier.EXPLODE_HORIZONTAL) {
+                // get all horizontal
+                for (let index = 0; index < 8; index++) {
+                    let gem = this.gemAt(index, item.y);
+                    res.add(gem);
+                }
+            }
+            if (item.modifier == GemModifier.EXPLODE_VERTICAL) {
+                // get all horizontal
+                for (let index = 0; index < 8; index++) {
+                    let gem = this.gemAt(item.x, index);
+                    res.add(gem);
+                }
+            }
+            if (item.modifier == GemModifier.EXPLODE_SQUARE) {
+                // get all horizontal
+                for (let indexX = item.x - 1; indexX <= item.x + 1; indexX++) {
+                    if (indexX < 0) continue;
+                    for (let indexY = item.y - 1; indexY <= item.y + 1; indexY++) {
+                        if (indexY < 0) continue;
+                        res.add(this.gemAt(indexX, indexY));
+                    }
+                }
+            }
+        }
 
         return res;
     }
@@ -239,7 +276,6 @@ class Grid {
     performSwap(index1, index2) {
         const currentGem = this.gems[index1];
         const swapGem = this.gems[index2];
-        console.log(currentGem, swapGem);
         this.swap(currentGem, swapGem);
         const allMatchGems = this.getAllMatches();
         const result = this.performDistinction(allMatchGems);
@@ -275,12 +311,17 @@ class Grid {
     distinctGemBatch(gems) {
         const removedGems = [];
         const matchSize = gems.size;
-        const maxLinearMatchSize = this.maxLinearMatch(gems);
         for(const gem of gems) {
             const removed = this.distinctGem(gem);
             removedGems.push(removed);
         }
-        const isExtraTurn = maxLinearMatchSize > 4;
+        // todo check extra
+        const maxLinearMatchSize = this.maxLinearMatch(gems);
+        let isExtraTurn = maxLinearMatchSize > 4;
+        // truong hop 1 co cai modifier extra
+        if (Array.from(gems).find(g => g.modifier == GemModifier.EXTRA_TURN)) {
+            isExtraTurn = true;
+        }
         return {
             matchSize,
             removedGems,
@@ -293,8 +334,8 @@ class Grid {
         const matchesY = {};
 
         for(const gem of gems) {
-            matchesX[gem.x] = matchesX[gem.x] ? 1 : matchesX[gem.x] + 1;  
-            matchesY[gem.y] = matchesY[gem.y] ? 1 : matchesY[gem.y] + 1;  
+            matchesX[gem.x] = !matchesX[gem.x] ? 1 : matchesX[gem.x] + 1;  
+            matchesY[gem.y] = !matchesY[gem.y] ? 1 : matchesY[gem.y] + 1;  
         }
 
         const maxX = Math.max(...Object.values(matchesX));

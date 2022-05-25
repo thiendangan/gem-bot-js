@@ -1,11 +1,12 @@
 class GemSwapInfo {
-    constructor(index1, index2, sizeMatch, type, matchGems)
+    constructor(index1, index2, sizeMatch, type, matchGems, isExtraTurn)
     {
         this.index1 = index1;
         this.index2 = index2;
         this.sizeMatch = sizeMatch;
         this.type = type;
         this.matchGems = matchGems;
+        this.isExtraTurn = isExtraTurn;
     }
 
     getIndexSwapGem() {

@@ -34,7 +34,7 @@ var enemyPlayer;
 var currentPlayerId;
 var grid;
 
-const username = "thien.dang";
+const username = "";
 const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzI4MjczNTcxNSwiZXhwIjoxNjU1MDgyNzM1fQ.hcScupwBmebBrdTXUNFwQes1Ba1k91PDdqmJvG2N4GVU2G28YhmTyXBoHIiy7loR6Pw-eLWiMaN9-gm-CiINqA";
 const tokenMap = {
 	"thien.dang": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzQwODEwMTA2OCwiZXhwIjoxNjU1MjA4MTAxfQ.cUBGnEfomzkvsRhS5raC6MdF-wlrAIynodkLMrr9vCiKOa4d-4vTtJE6jMKnJx7u7U7EVKawWHqCxJBNxXDPbg",
