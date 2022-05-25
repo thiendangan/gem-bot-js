@@ -90,6 +90,12 @@ class Hero {
         this.mana += value;
     }
 
+    buffHp(value) {
+        this.hp += value;
+    }
+    buffAttack(value) {
+        this.attack += value;
+    }
     clone() {
         const cloned = new Hero(this.objHero);
         cloned.playerId = this.playerId;

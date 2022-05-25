@@ -13,6 +13,9 @@ class GemSwapInfo {
         return [this.index1, this.index2];
     }
 
+    clone() {
+        return new GemSwapInfo(this.index1, this.index2, this.sizeMatch, this.type, this.matchGems, this.isExtraTurn);
+    }
     hasADGem() {
         for (let item of Array.from(this.matchGems)) {
             console.log("th3: itemitem", item);

@@ -10,10 +10,6 @@ class AotGameState {
     this.distinctions = [];
   }
 
-  isExtraturn() {
-    return this.hasExtraTurn;
-  }
-
   switchTurn() {
     const { enemyPlayer, botPlayer } = this;
     this.botPlayer = enemyPlayer.clone();
@@ -477,7 +473,7 @@ class AotScoreMetric {
   }
 
   calcExtraScore(state) {// dont relate to hero
-    return state.isExtraturn() ? 100 : 0;
+    return state.isExtraTurn ? 100 : 0;
   }
 
   calcScoreOfPlayer(player, state) {
@@ -622,7 +618,7 @@ class AoTStrategy {
   getScoreOnNextMove() {
     const futureState = this.applyMoveOnState(move, state);
     
-    if (futureState.isExtraturn()) {
+    if (futureState.isExtraTurn) {
       loginfo('th3', 'new turn', futureState);
       // duoc them turn thi cu chon ==> 100 point
       return 1000;
@@ -635,7 +631,8 @@ class AoTStrategy {
     }
 
     const futureState = this.applyMoveOnState(move, state);
-    if (futureState.isExtraturn()) {
+    if (futureState.isExtraTurn) {
+      //log 
       const newMove = this.chooseBestPosibleMove(futureState, deep);
       return this.seeFutureState(newMove, futureState, deep);
     }
