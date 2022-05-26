@@ -63,6 +63,9 @@ class Hero {
         this.maxMana = objHero.maxMana < 0 ? 0 : objHero.maxMana;
     }
 
+    hasSkill() {
+      return this.isAlive() && this.isFullMana();
+    }
     isAlive() {
         return this.hp > 0;
     }
@@ -352,10 +355,10 @@ class BaseSkill {
       }
       if (this.hero.hp > Math.max(enemyHeroAttack, enemyMaxAttack) + 3) {
         // truong hop ma ben doi phuong co skill thi phai cast ngay
-        if (enemyHeros.find(h => h.isAlive() && h.isFullMana())) {
+        if (enemyHeros.find(h => h.hasSkill())) {
           new SkillTarget(null, false);
         }
-        
+
         return new SkillTarget(null, true);
       }
 
@@ -391,9 +394,6 @@ class BaseSkill {
     //   return attack;
     // }
     getTarget(posibleSkillCasts, state) {
-      // neu doi phuong dang co skill buff attack thi doi buff
-
-      // 
       const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive(); // todo taget
       const firstHero = state.getCurrentPlayer().getHerosAlive();
       const attackBuff = ["MONK", "SEA_SPIRIT"];
@@ -402,7 +402,12 @@ class BaseSkill {
       let bestTake = 0;
       for (const item of enemyHeroAlive) {
         if (attackBuff.indexOf(item.id) > -1) {
-          //   return { targetId: item.id };
+          // kiem tra neu dang co skill thi doi buff dmg r ms cast
+          if (item.hasSkill()) {
+          // neu doi phuong dang co skill buff attack thi doi buff
+          console.log("th9: item.hasSkill()");
+            return new SkillTarget(bull, true);
+          }
           continue;
         }
         const attack =
