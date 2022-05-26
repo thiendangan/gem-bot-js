@@ -76,7 +76,7 @@ class Hero {
     }
 
     couldTakeMana(type) {
-        return this.isAcceptManaType(type) && !this.isFullMana();
+        return this.isAcceptManaType(+type) && !this.isFullMana();
     }
 
     isAcceptManaType(type) {
@@ -97,7 +97,8 @@ class Hero {
     }
 
     buffMana(value) {
-        this.mana += value;
+      this.mana += value;
+      console.log("th7: ssds", value, this.id, this.mana);
     }
 
     buffHp(value) {
@@ -135,7 +136,7 @@ class BaseSkill {
     }
   
     getScore(state) {
-      return 5;
+      return 10;
     }
   
     applySkill(state) {
@@ -268,21 +269,6 @@ class BaseSkill {
     //   return attack * enemyHeroAlive.length;
     // }
   }
-  class SEA_GOD_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Earth shock
-      // Deal damage to all enemies and reduce their mana"
-      this.takeDamgeEnemies(state, this.hero.attack);
-      // todo: reduce their mana
-      this.updateAttributeEnemies(state, {
-        hp: 0, attack: 0, mana: -3
-      })
-    }
-    // getScore(state) {
-    //   const heroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-    //   return this.hero.attack * heroAlive.length + heroAlive.length * 1;
-    // }
-  }
   class MERMAID_SKILL extends BaseSkill {
     applySkill(state) {
       // "Charge
@@ -302,6 +288,9 @@ class BaseSkill {
     // }
   }
   class SEA_SPIRIT_SKILL extends BaseSkill {
+    getScore(state) {
+      return 10.02;
+    }
     applySkill(state) {
       // "Focus
       // Increase [An allied hero]'s Attack and Health by 5 Hp. Gain an extra turn."
@@ -338,7 +327,50 @@ class BaseSkill {
     //   return 10 * heroAlive.length;
     // }
   }
+  
+  class SEA_GOD_SKILL extends BaseSkill {
+    getScore(state) {
+      return 10.03;
+    }
+    applySkill(state) {
+      // "Earth shock
+      // Deal damage to all enemies and reduce their mana"
+      this.takeDamgeEnemies(state, this.hero.attack);
+      // todo: reduce their mana
+      this.updateAttributeEnemies(state, {
+        hp: 0, attack: 0, mana: -3
+      })
+    }
+    getTarget(posibleSkillCasts, state){
+      var enemyPlayer = state.getCurrentEnemyPlayer();
+      let enemyMaxAttack = enemyPlayer.getCurrentMaxHp();
+      var enemyHeros = state.getCurrentEnemyPlayer().getHerosAlive();
+      var enemyHero = enemyHeros.find(h => h.id == 'FIRE_SPIRIT');
+      let enemyHeroAttack = 0;
+      if (enemyHero) {
+        enemyHeroAttack = this.hero.attack + state.grid.getNumberOfGemByType(GemType.RED);
+      }
+      if (this.hero.hp > Math.max(enemyHeroAttack, enemyMaxAttack) + 3) {
+        // truong hop ma ben doi phuong co skill thi phai cast ngay
+        if (enemyHeros.find(h => h.isAlive() && h.isFullMana())) {
+          new SkillTarget(null, false);
+        }
+        
+        return new SkillTarget(null, true);
+      }
+
+      return new SkillTarget(null, false);
+    }
+    // getScore(state) {
+    //   const heroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
+    //   return this.hero.attack * heroAlive.length + heroAlive.length * 1;
+    // }
+  }
+
   class FIRE_SPIRIT_SKILL extends BaseSkill {
+    getScore(state) {
+      return 10.01;
+    }
     applySkill(state) {
       // "Volcano's wrath
       // Deal damage to an enemy based on their current Attack and number of  Red Gems on the board."
@@ -359,17 +391,24 @@ class BaseSkill {
     //   return attack;
     // }
     getTarget(posibleSkillCasts, state) {
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();// todo taget
-      const attackBuff = ['MONK', 'SEA_SPIRIT'];
+      // neu doi phuong dang co skill buff attack thi doi buff
+
+      // 
+      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive(); // todo taget
+      const firstHero = state.getCurrentPlayer().getHerosAlive();
+      const attackBuff = ["MONK", "SEA_SPIRIT"];
       // uu tien giet truoc
       let shouldKill = null;
       let bestTake = 0;
       for (const item of enemyHeroAlive) {
         if (attackBuff.indexOf(item.id) > -1) {
-        //   return { targetId: item.id };
-            continue;
+          //   return { targetId: item.id };
+          continue;
         }
-        const attack = item.attack + state.grid.getNumberOfGemByType(GemType.RED) + this.hero.attack;// item.attack
+        const attack =
+          item.attack +
+          state.grid.getNumberOfGemByType(GemType.RED) +
+          this.hero.attack; // item.attack
         // uu tien
         const damageTake = Math.min(attack, item.hp);
         if (damageTake > bestTake) {
@@ -377,10 +416,25 @@ class BaseSkill {
           bestTake = damageTake;
         }
       }
-      
+
+      //neu giet chet duoc
+      //check co phai la ELIZAH la shouldKill va co full mana khong
+      const isElizahCanKill =
+        shouldKill.id === "ELIZAH" && shouldKill.maxMana === shouldKill.mana;
+      if (bestTake >= shouldKill.hp && !isElizahCanKill)
+        return new SkillTarget(shouldKill);
+
+      //co nen danh con dau tien khong?
+      const damegeFirstBot = firstHero.attack;
+      if (
+        enemyHeroAlive[0].hp - bestTake <= damegeFirstBot &&
+        !isElizahCanKill
+      ) {
+        return new SkillTarget(enemyHeroAlive[0]);
+      }
+
       // uu tien kill
-      shouldKill = shouldKill ? shouldKill : enemyHeroAlive[0];
-  
+      //shouldKill = shouldKill ? shouldKill : enemyHeroAlive[0];
       return new SkillTarget(shouldKill);
     }
   }

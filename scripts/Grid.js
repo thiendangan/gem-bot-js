@@ -323,8 +323,7 @@ class Grid {
                 matches.push(matchGems);
             }
         }
-        return matches;
-        // return matches.length > 0 ? [union(matches)] : [];
+        return matches.length > 0 ? [matches[0]] : [];
     }
     
     performDistinction(allMatchGems) {
