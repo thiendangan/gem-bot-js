@@ -430,16 +430,16 @@ class BaseSkill {
           bestTake = damageTake;
         }
       }
-      if (!hasHeroDie) {
-        for (const item of enemyHeroAlive) {
-          // kiem tra neu dang co skill thi doi buff dmg r ms cast
-          if (item.hasSkill() && enemyHeroAlive.length > 1) {
-          // neu doi phuong dang co skill buff attack thi doi buff
-            console.error("th9: item.hasSkill()");
-            return new SkillTarget(null, true);
-          }
-        }
-      }
+      // if (!hasHeroDie) {
+      //   for (const item of enemyHeroAlive) {
+      //     // kiem tra neu dang co skill thi doi buff dmg r ms cast
+      //     if (item.hasSkill() && enemyHeroAlive.length > 1) {
+      //     // neu doi phuong dang co skill buff attack thi doi buff
+      //       console.error("th9: item.hasSkill()");
+      //       return new SkillTarget(null, true);
+      //     }
+      //   }
+      // }
 
       // //neu giet chet duoc
       // //check co phai la ELIZAH la shouldKill va co full mana khong
