@@ -424,7 +424,12 @@ function loginfo(...args) {
         }
         // loginfo('', JSON.stringify(state), '--------', JSON.stringify(futureState), 'move', move);
         const simulateMoveScore = this.compareScoreOnStates(state, futureState, move);
-
+        // neu enemy chet het thi return luon skill
+        const enemyHeroAlive = this.state.getCurrentEnemyPlayer().firstHeroAlive();
+        if (!enemyHeroAlive) {
+          console.log("th4: all die");
+          return move;
+        }
         listFutureState.push({state: futureState, move, simulateMoveScore});
         // compare score after swap
         if (simulateMoveScore > currentBestMoveScore) {
