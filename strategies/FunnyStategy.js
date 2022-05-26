@@ -500,12 +500,17 @@ function loginfo(...args) {
       if (deep === 0 || !move) {
         return state;
       }
-  
+      const enemyHeroAlive1 = state.getCurrentEnemyPlayer().firstHeroAlive();
+      if (!enemyHeroAlive1) {
+        console.log("th4: seeFutureState all die enemyHeroAlive1");
+        return state;
+      }
+
       const futureState = this.applyMoveOnState(move, state);
       const enemyHeroAlive = futureState.getCurrentEnemyPlayer().firstHeroAlive();
       if (!enemyHeroAlive) {
         console.log("th4: seeFutureState all die");
-        return state;
+        return futureState;
       }
 
       if (futureState.isExtraTurn) {
