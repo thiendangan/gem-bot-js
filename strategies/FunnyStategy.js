@@ -435,6 +435,7 @@ function loginfo(...args) {
       // truong hop currentBestMoveScore co nhieu lua chon
       // tinh toan ti le gio han doi phuong
       if (isIncludeEnemy) {
+        // 1 so case can tinh nhieu solution hon
         const listSolutions = listFutureState.filter(l => l.simulateMoveScore == currentBestMoveScore);
         if (listSolutions && listSolutions.length) {
           currentBestMove = this.getBestMoveWithEnemyAdvantage(listSolutions);
@@ -492,7 +493,10 @@ function loginfo(...args) {
     }
 
     seeFutureState(move, state, deep) {
-      if (deep === 0) {
+      if (!move) {
+        console.warn("seeFutureState move");
+      }
+      if (deep === 0 || !move) {
         return state;
       }
   
