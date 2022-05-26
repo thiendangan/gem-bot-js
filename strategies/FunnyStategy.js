@@ -328,18 +328,30 @@ function loginfo(...args) {
     getSkillShouldCast(posibleSkillCasts, state) {
       let skill = posibleSkillCasts.length ? posibleSkillCasts[0] : null;
       let currentScore = 0;
+      // get skill SEA_SPIRIT neu co
+      const seaSprit = posibleSkillCasts.find(h => h.hero.id == 'SEA_SPIRIT');
+      if (seaSprit) {// todo damage > thi k an skill uu tien cai khac
+        const { hero, dontCast } = seaSprit.hero.skill().getTarget(posibleSkillCasts, state);
+        if (!dontCast) {
+          // dontCast
+          seaSprit.targetId = hero.id;
+          return seaSprit;
+        }
+      }
+
       for (const move of posibleSkillCasts) {
         skill = move;
         const { hero, dontCast } = move.hero.skill().getTarget(posibleSkillCasts, state);
         if (dontCast) {
+          // dontCast
           continue;
         }
         const targetId = hero?.id;
         // todo
         move.targetId = targetId;
-        if (["SEA_SPIRIT"].includes(targetId)) {
-          return move;
-        }
+        // if (["SEA_SPIRIT"].includes(targetId)) {
+        //   return move;
+        // }
         const { hp, mana} = move.hero.skill().getDamage(state);
         const skillScore = hp + mana/3;// todo this
 

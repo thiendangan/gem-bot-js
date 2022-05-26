@@ -241,7 +241,11 @@ class Grid {
         // check modifiers
         // GemModifier.EXTRA_TURN
         // EXTRA_TURN: 5,
-        this.performMoreGem(res);// use ref
+        try {
+            this.performMoreGem(res);// use ref
+        } catch(ex) {
+            console.warn("todo: nhieu gem no performMoreGem", ex);
+        }
 
         return res;
     }
