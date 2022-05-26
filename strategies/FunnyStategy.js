@@ -334,13 +334,13 @@ function loginfo(...args) {
       // loginfo(`${FunnyStrategy.name}: getCurrentState`);
       return this.state.clone();
     }
-    getSkillShouldCast(posibleSkillCasts, state) {
+    getSkillShouldCast(posibleGemSwaps, posibleSkillCasts, state) {
       let skill = null;
       let currentScore = 0;
       // get skill SEA_SPIRIT neu co
       const seaSprit = posibleSkillCasts.find(h => h.hero.id == 'SEA_SPIRIT');
       if (seaSprit) {// todo damage > thi k an skill uu tien cai khac
-        const { hero, dontCast } = seaSprit.hero.skill().getTarget(posibleSkillCasts, state);
+        const { hero, dontCast } = seaSprit.hero.skill().getTarget(posibleGemSwaps, posibleSkillCasts, state);
         if (!dontCast) {
           // dontCast
           seaSprit.targetId = hero.id;
@@ -349,7 +349,7 @@ function loginfo(...args) {
       }
 
       for (const move of posibleSkillCasts) {
-        const { hero, dontCast } = move.hero.skill().getTarget(posibleSkillCasts, state);
+        const { hero, dontCast } = move.hero.skill().getTarget(posibleGemSwaps, posibleSkillCasts, state);
         if (dontCast) {
           // dontCast
           continue;
@@ -431,7 +431,7 @@ function loginfo(...args) {
           `${FunnyStrategy.name}: posibleSkillCasts`, posibleSkillCasts
         );
         // priority cast skill// todo case swap better than skill
-        const skill = this.getSkillShouldCast(posibleSkillCasts, state.clone());
+        const skill = this.getSkillShouldCast(posibleGemSwaps, posibleSkillCasts, state.clone());
         if (skill) {
           return skill;
         }

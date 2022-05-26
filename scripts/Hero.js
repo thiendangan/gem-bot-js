@@ -162,7 +162,7 @@ class BaseSkill {
         }
     }
 
-    getTarget(posibleSkillCasts, state) {
+    getTarget(posibleGemSwaps, posibleSkillCasts, state) {
       return new SkillTarget(null);
     }
   
@@ -302,9 +302,10 @@ class BaseSkill {
       }, 1)
       // todo: Gain an extra turn.
     }
-    getTarget(posibleSkillCasts, state) {
+    getTarget(posibleGemSwaps, posibleSkillCasts, state) {
       const heroAlive = state.getCurrentPlayer().getHerosAlive();
-      let dontCast = false;
+      // let dontCast = false;
+      let dontCast = true;
       let hero = heroAlive[0];
       const temHero = heroAlive.find(h => !['SEA_SPIRIT', 'FIRE_SPIRIT'].includes(h.id));
       // const hero = heroAlive[Math.floor(Math.random()*heroAlive.length)];
@@ -321,6 +322,15 @@ class BaseSkill {
             dontCast = true;
         }
       }
+      // doi SEA_GOD co skill r ms buff or da chet
+      let seaGod = heroAlive.find(h => h.id == 'SEA_GOD');
+      if (!seaGod || seaGod && seaGod.hasSkill()) {
+        dontCast = false;
+      }
+      // neu buff cho ban than va co kiem de kill co the buff r dung kiem
+      // kiem tra co kiem tren ban hay k
+      // todo
+
 
       return new SkillTarget(hero, dontCast);
     }
@@ -344,7 +354,7 @@ class BaseSkill {
         hp: 0, attack: 0, mana: -3
       })
     }
-    getTarget(posibleSkillCasts, state){
+    getTarget(posibleGemSwaps, posibleSkillCasts, state){
       var enemyPlayer = state.getCurrentEnemyPlayer();
       let enemyMaxAttack = enemyPlayer.getCurrentMaxHp();
       var enemyHeros = state.getCurrentEnemyPlayer().getHerosAlive();
@@ -378,7 +388,7 @@ class BaseSkill {
       // "Volcano's wrath
       // Deal damage to an enemy based on their current Attack and number of  Red Gems on the board."
       let currentRedGem = state.grid.getNumberOfGemByType(GemType.RED);
-      const { hero } = this.getTarget(null, state);
+      const { hero } = this.getTarget(null, null, state);
       let attack = 0;
       if(hero) {
         attack = hero.attack + currentRedGem;
@@ -393,7 +403,7 @@ class BaseSkill {
       
     //   return attack;
     // }
-    getTarget(posibleSkillCasts, state) {
+    getTarget(posibleGemSwaps, posibleSkillCasts, state) {
       const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive(); // todo taget
       const firstHero = state.getCurrentPlayer().getHerosAlive();
       const attackBuff = ["MONK", "SEA_SPIRIT"];
@@ -455,11 +465,11 @@ class BaseSkill {
       // "Death's touch
       // Deal damage to an enemy, with 25% chance to instant kill the enemy. 
       // If skill failed to instant kill enemy, gain extra turn, and next cast gonna have 50% insteed."
-      const { targetId, hero } = this.getTarget(null, state);
+      const { targetId, hero } = this.getTarget(null, null, state);
       this.takeDamgeEnemies(state, hero.hp * 0.5, targetId);
     }
     
-    getTarget(posibleSkillCasts, state) {
+    getTarget(posibleGemSwaps, posibleSkillCasts, state) {
         const herosAlive = state.getCurrentEnemyPlayer().getHerosAlive();
         // todo
         
