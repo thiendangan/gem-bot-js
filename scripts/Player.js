@@ -8,7 +8,6 @@ class Player
         this.heroes = [];
         this.heroGemType = new Set();
     }
-
     getTotalHeroAlive() {
         return this.getHerosAlive().length;
     }
@@ -21,7 +20,6 @@ class Player
         const heros = this.getHerosAlive();
         return Math.max(...heros.map(h => h.hp));
     }
-    
 
     getCastableHeros() {
         let arr = this.heroes.filter(hero => hero.isAlive() && hero.isFullMana());

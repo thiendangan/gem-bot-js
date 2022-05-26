@@ -49,340 +49,9 @@ function loginfo(...args) {
     constructor(hero) {
       super();
       this.hero = hero;
-      this.skill = SkillFactory.getSkillByHero(hero);
     }
   }
-  
-  class SkillFactory {
-    static getSkillByHero(hero) {
-      const skillName = hero.id;
-      const skill = eval(`new ${skillName}_SKILL()`);
-      skill.AddHero(hero);
-      return skill;
-    }
-  }
-  
-  class BaseSkill {
-    AddHero(hero) {// todo
-      this.hero = hero;
-    }
-  
-    getScore(state) {
-      return 5;
-    }
-  
-    applySkill(state) {
-      // todo apply skill logic
-      // should remove
-      // other case for skill
-  
-    }
-    getTarget(posibleSkillCasts, state) {
-      return { skillScore: 1, targetId: null};
-    }
-  
-    takeDamgeEnemies(state, attack, numOfEnemies = 10, heroId = undefined) {
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-      let heroLenth = 0;
-      for (const hero of enemyHeroAlive) {
-        heroLenth++;
-        if (heroLenth > numOfEnemies && !heroId) break;
-        if (heroId && hero.id != heroId) continue;
-
-        hero.takeDamge(attack);
-      }
-    }
     
-    updateAttributeEnemies(state, data = {
-      hp: 0, attack: 0, mana: 0
-    }, numOfHero = 10) {
-      let heroLenth = 0;
-      const heroAlives = state.getCurrentEnemyPlayer().getHerosAlive();
-      for (const hero of heroAlives) {
-        heroLenth++;
-        if (heroLenth > numOfHero) break;
-        hero.updateHeroLocal({
-          hp: hero.hp + data.hp,
-          attack: hero.attack + data.attack,
-          mana: hero.mana + data.mana,
-          maxMana: hero.maxMana
-        })
-      }
-    }
-
-    updateAttributeAllies(state, data = {
-      hp: 0, attack: 0, mana: 0
-    }, numOfHero = 10) {
-      let heroLenth = 0;
-      const heroAlives = state.getCurrentPlayer().getHerosAlive();
-      for (const hero of heroAlives) {
-        heroLenth++;
-        if (heroLenth > numOfHero) break;
-        hero.updateHeroLocal({
-          hp: hero.hp + data.hp,
-          attack: hero.attack + data.attack,
-          mana: hero.mana + data.mana,
-          maxMana: hero.maxMana
-        })
-      }
-    }
-  }
-  
-  class THUNDER_GOD_SKILL extends BaseSkill {
-    applySkill(state) {// todo apply skill logic
-      // "Chain Lighning 
-      // Deal damage to all enemies, based on his current Attack Attribute and 
-      // Number of Light Gems on the Board"
-      let attack = this.hero.attack;
-      let currentRedGem = state.grid.getNumberOfGemByType(GemType.SWORD);
-      this.takeDamgeEnemies(state, attack + currentRedGem);
-    }
-    
-    // getScore(state) {
-    //   let currentRedGem = state.grid.getNumberOfGemByType(GemType.SWORD);
-    //   let attack = this.hero.attack + currentRedGem;
-    //   const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-  
-    //   return attack * enemyHeroAlive.length;
-    // }
-  }
-  class MONK_SKILL extends BaseSkill {
-    applySkill(state) {
-    // "Bless of Light 
-    // Add 8 atttack damage to all Allies"
-      this.updateAttributeAllies(state, {
-        hp: 0, attack: 8, mana: 0
-      })
-    }
-    
-    // getScore(state) {
-    //     const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-    //     if (!enemyHeroAlive.find(hero => hero.hp > this.hero.attack)) {
-    //         return -1000;
-    //     }
-    //     if (this.hero.attack < 14) {
-    //       return 1000;
-    //     }
-
-    //     return 0.1;
-    // }
-  
-    getTarget(posibleSkillCasts, state) {// priority 1 -> 10
-      const heroAlive = state.getCurrentPlayer().getHerosAlive();
-      const skillScore = 1;
-      if (heroAlive[0].attack < 14) {
-        skillScore += 10;// max priority
-      }
-      return { skillScore, targetId: null};
-    }
-  }
-  class AIR_SPIRIT_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Wind force 
-      // Deal damage to all enemies and blow away a selected gem area in the board."
-      this.takeDamgeEnemies(state, this.hero.attack);
-      // todo: blow away a selected gem area in the board.
-    }
-    
-    // getScore(state) {
-    //   let attack = this.hero.attack;
-    //   const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-    //   return attack * enemyHeroAlive.length;
-    // }
-  }
-  class SEA_GOD_SKILL extends BaseSkill {
-  
-    applySkill(state) {
-      // "Earth shock
-      // Deal damage to all enemies and reduce their mana"
-      this.takeDamgeEnemies(state, this.hero.attack);
-      // todo: reduce their mana
-      this.updateAttributeEnemies(state, {
-        hp: 0, attack: 0, mana: -3
-      })
-    }
-    
-    // getScore(state) {
-    //   const heroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-    //   return this.hero.attack * heroAlive.length + heroAlive.length * 1;
-    // }
-  }
-  class MERMAID_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Charge
-      // Deal damage to all enemies based on her current Attack atrribute. Increase her Attack"
-      this.takeDamgeEnemies(state, this.hero.attack);
-      // todo: Increase her Attack
-      this.updateAttributeAllies(state, {
-        hp: 0, attack: 1
-      })
-    }
-  
-    // getScore(state) {
-    //   const heroAlive = state.getCurrentPlayer().getHerosAlive();
-    //   const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-  
-    //   return this.hero.attack * enemyHeroAlive.length + heroAlive.length;
-    // }
-  }
-  class SEA_SPIRIT_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Focus
-      // Increase [An allied hero]'s Attack and Health by 5 Hp. Gain an extra turn."
-      this.updateAttributeAllies(state, {// todo: should choose right hero base on current attr
-        hp: 5, attack: 5
-      }, 1)
-      // todo: Gain an extra turn.
-    }
-    getTarget(posibleSkillCasts, state) {
-      const heroAlive = state.getCurrentPlayer().getHerosAlive();
-      let isCast = true;
-      let hero = heroAlive[0];
-      const temHero = heroAlive.find(h => !['SEA_SPIRIT', 'FIRE_SPIRIT'].includes(h.id));
-      // const hero = heroAlive[Math.floor(Math.random()*heroAlive.length)];
-      if (temHero && temHero.attack < state.getCurrentEnemyPlayer().getCurrentMaxHp()) {
-        // neu hero attack > max enemy ==> k buff
-        hero = temHero
-      }
-      // neu hero attack > max enemy ==> k buff
-      if (hero.attack >= state.getCurrentEnemyPlayer().getCurrentMaxHp()) {
-        const otherHero = heroAlive.find(h => h != hero && h != temHero);
-        if (otherHero) {
-          hero = otherHero;
-        } else {
-          isCast = false;
-        }
-      }
-
-      return { targetId: hero.id, isCast }
-    }
-
-    // getScore(state) {
-    //   const heroAlive = state.getCurrentPlayer().getHerosAlive();
-    //   return 10 * heroAlive.length;
-    // }
-  }
-  class FIRE_SPIRIT_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Volcano's wrath
-      // Deal damage to an enemy based on their current Attack and number of  Red Gems on the board."
-      let currentRedGem = state.grid.getNumberOfGemByType(GemType.RED);
-      const { hero: heroTarget } = this.getTarget(null, state);
-      let attack = heroTarget?.attack || 6 + currentRedGem;
-
-      this.takeDamgeEnemies(state, attack + currentRedGem, 1, heroTarget?.id);
-    }
-    
-    // getScore(state) {
-    //   let currentRedGem = state.grid.getNumberOfGemByType(GemType.RED);
-    //   const { hero: heroTarget } = this.getTarget(null, state);
-    //   let attack = heroTarget?.attack || 6 + currentRedGem;
-      
-    //   return attack;
-    // }
-    getTarget(posibleSkillCasts, state) {
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();// todo taget
-      const attackBuff = ['MONK', 'SEA_SPIRIT'];
-      // uu tien giet truoc
-      let shouldKill = null;
-      let bestTake = 0;
-      for (const item of enemyHeroAlive) {
-        if (attackBuff.indexOf(item.id) > -1) {
-        //   return { targetId: item.id };
-            continue;
-        }
-        const attack = item.attack + state.grid.getNumberOfGemByType(GemType.RED) + this.hero.attack;// item.attack
-        // uu tien
-        const damageTake = Math.min(attack, item.hp);
-        if (damageTake > bestTake) {
-          shouldKill = item;
-          bestTake = damageTake;
-        }
-      }
-      if (!shouldKill) {
-        let preAttack = 0;
-        for (const item of enemyHeroAlive) {
-          if (!shouldKill) {
-              shouldKill = item;
-          }
-          const attack = item.attack + state.grid.getNumberOfGemByType(GemType.RED) + this.hero.attack;// item.attack
-          // uu tien
-          if (attack >= preAttack) {
-            // should kill
-            shouldKill = item;
-          }
-        }
-      }
-      
-      // uu tien kill
-      shouldKill = shouldKill ? shouldKill : enemyHeroAlive[0];
-  
-      return { targetId: shouldKill?.id || 0, hero: shouldKill };
-    }
-  }
-  class CERBERUS_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Cerberus's bite 
-      // Deal damage to All enemies and increase it's attack"
-      this.takeDamgeEnemies(state, this.hero.attack);
-      // todo: Increase her Attack
-      this.updateAttributeAllies(state, {
-        hp: 0, attack: 1
-      })
-    }
-    
-    // getScore(state) {
-    //   const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-    //   const heroAlive = state.getCurrentPlayer().getHerosAlive();
-  
-    //   return this.hero.attack * enemyHeroAlive.length + heroAlive.length;
-    // }
-  }
-  class DISPATER_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Death's touch
-      // Deal damage to an enemy, with 25% chance to instant kill the enemy. 
-      // If skill failed to instant kill enemy, gain extra turn, and next cast gonna have 50% insteed."
-      this.takeDamgeEnemies(state, this.hero.attack + 5, 1);
-    }
-    
-    // getScore(state) {
-    //   return 10;
-    // }
-  }
-  class ELIZAH_SKILL extends BaseSkill {
-  
-    applySkill(state) {
-      // todo apply skill logic
-      // "Resurection
-      // If killed with full mana, respawn with full HP. This skill is passive, automatic active."
-      this.updateAttributeAllies(state, {
-        hp: 10,
-        attack: 0
-      }, 1);
-    }
-    
-    // getScore(state) {
-    //   return 10;
-    // }
-  }
-  class SKELETON_SKILL extends BaseSkill {
-  
-    applySkill(state) {
-      // todo apply skill logic
-      // "Soul Swap
-      // Swap your HP with the target hero's HP (can target heroes on both sides)"
-      this.updateAttributeAllies(state, {
-        hp: 10,
-        attack: 0
-      }, 1);
-    }
-    
-    // getScore(state) {
-    //   return 10;
-    // }
-  }
-  
   class AotSwapGem extends AotMove {
     type = "SWAP_GEM";
     isSwap = true;
@@ -559,7 +228,7 @@ function loginfo(...args) {
     applyCastSkill(move) {
       // loginfo('th3: applyCastSkill', move);
       // cacl damage take 
-      move.skill.applySkill(this.state);
+      move.hero.skill().applySkill(this.state);
     }
   }
   
@@ -573,7 +242,7 @@ function loginfo(...args) {
     overManaMetric = new LinearScale(-1, 0);
   
     caclcHeroManaScore(hero, state) {
-      const skillScore = SkillFactory.getSkillByHero(hero).getScore(state);
+      const skillScore = hero.skill().getScore(state);
       // loginfo('th3: skillScore', hero.id, skillScore);
       // ??? mana = 0
       return ((hero.mana + 0.1)/(hero.maxMana)) * skillScore;
@@ -658,16 +327,19 @@ function loginfo(...args) {
       let currentScore = 0;
       for (const move of posibleSkillCasts) {
         skill = move;
-        const { targetId, isCast } = move.skill.getTarget(posibleSkillCasts, state);
-        if (!isCast) {
+        const { hero, dontCast } = move.hero.skill().getTarget(posibleSkillCasts, state);
+        if (dontCast) {
           continue;
         }
+        const targetId = hero?.id;
         // todo
         move.targetId = targetId;
         if (["SEA_SPIRIT"].includes(targetId)) {
           return move;
         }
-        const skillScore = move.skill.getScore(state);
+        const { hp, mana} = move.hero.skill().getDamage(state);
+        const skillScore = hp + mana/3;// todo this
+
         if (skillScore > currentScore) {
           currentScore = skillScore;
           skill = move;
@@ -764,12 +436,17 @@ function loginfo(...args) {
       for (const wState of listState) {
         const cloneState = wState.state.clone();
         cloneState.switchTurn();
-        const tempEnemyScore = this.getEnemyScoreFromState(cloneState);
-        if (tempEnemyScore < enemyScore) {
-          enemyScore = tempEnemyScore;
-          bestMove = wState.move;
-          loginfo("th4 enemyScore", enemyScore);
+        try {
+          const tempEnemyScore = this.getEnemyScoreFromState(cloneState);
+          if (tempEnemyScore < enemyScore) {
+            enemyScore = tempEnemyScore;
+            bestMove = wState.move;
+          }
+        } catch(ex) {
+          // todo
+          console.error("in some case", ex);
         }
+
       }
 
       return bestMove;
