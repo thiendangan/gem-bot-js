@@ -318,7 +318,7 @@ function loginfo(...args) {
           this.swapGemHandle(action.swap);
         }
         loginfo(`th3: end all playTurn`);
-      }, 1000)
+      }, 3000)
     }
   
     getCurrentState() {
