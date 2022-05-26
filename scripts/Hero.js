@@ -411,14 +411,9 @@ class BaseSkill {
       // uu tien giet truoc
       let shouldKill = null;
       let bestTake = 0;
+      let hasHeroDie = false;
       for (const item of enemyHeroAlive) {
         if (attackBuff.indexOf(item.id) > -1) {
-          // kiem tra neu dang co skill thi doi buff dmg r ms cast
-          if (item.hasSkill() && enemyHeroAlive.length > 1) {
-          // neu doi phuong dang co skill buff attack thi doi buff
-            console.error("th9: item.hasSkill()");
-            return new SkillTarget(null, true);
-          }
           continue;
         }
         const attack =
@@ -427,9 +422,22 @@ class BaseSkill {
           this.hero.attack; // item.attack
         // uu tien
         const damageTake = Math.min(attack, item.hp);
+        if (!hasHeroDie) {
+          hasHeroDie = damageTake == item.hp;
+        }
         if (damageTake > bestTake) {
           shouldKill = item;
           bestTake = damageTake;
+        }
+      }
+      if (!hasHeroDie) {
+        for (const item of enemyHeroAlive) {
+          // kiem tra neu dang co skill thi doi buff dmg r ms cast
+          if (item.hasSkill() && enemyHeroAlive.length > 1) {
+          // neu doi phuong dang co skill buff attack thi doi buff
+            console.error("th9: item.hasSkill()");
+            return new SkillTarget(null, true);
+          }
         }
       }
 
