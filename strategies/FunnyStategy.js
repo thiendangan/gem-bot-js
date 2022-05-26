@@ -373,6 +373,14 @@ function loginfo(...args) {
       for (const move of posibleGemSwaps) {
         const cloneState = state.clone();
         const futureState = this.seeFutureState(move, cloneState, deep);
+        // neu enemy chet het thi return luon skill
+        // todo refactor dup code
+        const enemyHeroAlive = futureState.getCurrentEnemyPlayer().firstHeroAlive();
+        if (!enemyHeroAlive) {
+          console.log("th4: chooseBestPosibleMove all die");
+          return move;
+        }
+
         if (futureState.isExtraTurn) {
           return move;
         }
