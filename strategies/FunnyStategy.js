@@ -487,7 +487,11 @@ function loginfo(...args) {
       const futureState = this.applyMoveOnState(move, state);
       if (futureState.isExtraTurn) {
         const newMove = this.chooseBestPosibleMove(futureState, deep);
-        return this.seeFutureState(newMove, futureState, deep);
+        if (!newMove) {
+          console.error("tai sao newMove");
+        } else {
+          return this.seeFutureState(newMove, futureState, deep);
+        }
       }
       const newMove = this.chooseBestPosibleMove(futureState, deep - 1);
       if (state.isExtraTurn) {// todo check
