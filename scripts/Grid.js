@@ -250,6 +250,10 @@ class Grid {
         const resArray = Array.from(res);
         const newSetGem = new Set();
         for (const item of resArray) {
+            if (!item) {
+                debugger;
+                console.error("tai sao")
+            }
             if (item.modifier == GemModifier.EXPLODE_HORIZONTAL) {
                 // get all horizontal
                 for (let index = 0; index < 8; index++) {

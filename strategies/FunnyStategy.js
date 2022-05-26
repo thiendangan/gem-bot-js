@@ -204,7 +204,10 @@ function loginfo(...args) {
       const damgeMetric = new AttackDamgeMetric();
       const attackDame = 1 * damgeMetric.exec(attackGem, myHeroAlive);
       const enemyHeroAlive = this.state.getCurrentEnemyPlayer().firstHeroAlive();
-      enemyHeroAlive.takeDamge(attackDame);
+      enemyHeroAlive && enemyHeroAlive.takeDamge(attackDame);
+      if (!enemyHeroAlive) {
+        console.error("tai sao");
+      }
     }
   
     applyMana(type, value) {
