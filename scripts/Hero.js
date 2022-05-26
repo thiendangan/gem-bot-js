@@ -403,7 +403,7 @@ class BaseSkill {
       for (const item of enemyHeroAlive) {
         if (attackBuff.indexOf(item.id) > -1) {
           // kiem tra neu dang co skill thi doi buff dmg r ms cast
-          if (item.hasSkill()) {
+          if (item.hasSkill() && enemyHeroAlive.length > 1) {
           // neu doi phuong dang co skill buff attack thi doi buff
             console.error("th9: item.hasSkill()");
             return new SkillTarget(null, true);
