@@ -406,7 +406,7 @@ class BaseSkill {
           if (item.hasSkill()) {
           // neu doi phuong dang co skill buff attack thi doi buff
           console.log("th9: item.hasSkill()");
-            return new SkillTarget(bull, true);
+            return new SkillTarget(null, true);
           }
           continue;
         }
