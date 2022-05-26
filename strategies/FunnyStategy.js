@@ -302,23 +302,21 @@ function loginfo(...args) {
       loginfo(`th3: playTurn`);
       const state = this.getCurrentState();
       // wait// done update gem
-      setTimeout(() => {
-        const action = this.chooseBestPosibleMove(state, 1, true);
-        loginfo(`th3: end playTurn`);
-        if (action.isCastSkill) {
-          loginfo(`th3: isCastSkill`);
-          this.castSkillHandle(action.hero, { 
-            targetId: action.targetId, 
-            selectedGem: action.selectedGem, 
-            gemIndex: action.gemIndex, 
-            // isTargetAllyOrNot: 
-          });// ytodo cast with target
-        } else if (action.isSwap) {
-          loginfo(`th3: isSwap`);
-          this.swapGemHandle(action.swap);
-        }
-        loginfo(`th3: end all playTurn`);
-      }, 3000)
+      const action = this.chooseBestPosibleMove(state, 1, true);
+      loginfo(`th3: end playTurn`);
+      if (action.isCastSkill) {
+        loginfo(`th3: isCastSkill`);
+        this.castSkillHandle(action.hero, { 
+          targetId: action.targetId, 
+          selectedGem: action.selectedGem, 
+          gemIndex: action.gemIndex, 
+          // isTargetAllyOrNot: 
+        });// ytodo cast with target
+      } else if (action.isSwap) {
+        loginfo(`th3: isSwap`);
+        this.swapGemHandle(action.swap);
+      }
+      loginfo(`th3: end all playTurn`);
     }
   
     getCurrentState() {
