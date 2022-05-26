@@ -417,17 +417,18 @@ function loginfo(...args) {
       for (const move of posibleGemSwaps) {
         const cloneState = state.clone();
         const futureState = this.seeFutureState(move, cloneState, deep);
+        // neu enemy chet het thi return luon skill
+        const enemyHeroAlive = futureState.getCurrentEnemyPlayer().firstHeroAlive();
+        if (!enemyHeroAlive) {
+          console.log("th4: all die");
+          return move;
+        }
         if (futureState.isExtraTurn) {
           return move;
         }
         // loginfo('', JSON.stringify(state), '--------', JSON.stringify(futureState), 'move', move);
         const simulateMoveScore = this.compareScoreOnStates(state, futureState, move);
-        // neu enemy chet het thi return luon skill
-        const enemyHeroAlive = this.state.getCurrentEnemyPlayer().firstHeroAlive();
-        if (!enemyHeroAlive) {
-          console.log("th4: all die");
-          return move;
-        }
+
         listFutureState.push({state: futureState, move, simulateMoveScore});
         // compare score after swap
         if (simulateMoveScore > currentBestMoveScore) {
@@ -496,21 +497,20 @@ function loginfo(...args) {
     }
 
     seeFutureState(move, state, deep) {
-      if (!move) {
-        console.warn("seeFutureState move");
-      }
       if (deep === 0 || !move) {
         return state;
       }
   
       const futureState = this.applyMoveOnState(move, state);
+      const enemyHeroAlive = futureState.getCurrentEnemyPlayer().firstHeroAlive();
+      if (!enemyHeroAlive) {
+        console.log("th4: seeFutureState all die");
+        return state;
+      }
+
       if (futureState.isExtraTurn) {
         const newMove = this.chooseBestPosibleMove(futureState, deep);
-        if (!newMove) {
-          console.error("tai sao newMove");
-        } else {
-          return this.seeFutureState(newMove, futureState, deep);
-        }
+        return this.seeFutureState(newMove, futureState, deep);
       }
       const newMove = this.chooseBestPosibleMove(futureState, deep - 1);
       if (state.isExtraTurn) {// todo check
