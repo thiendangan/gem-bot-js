@@ -381,6 +381,7 @@ function loginfo(...args) {
     shouldUseSword(posibleSkillCasts, futureState, move) {
       const myHeroAlive = futureState.getCurrentPlayer().firstHeroAlive();
       const enemyHerosAlive = futureState.getCurrentEnemyPlayer().getHerosAlive();
+      let enemyHeroAlive = enemyHerosAlive[0];
       if (enemyHerosAlive.length == 1 && myHeroAlive.attack > enemyHerosAlive[0].hp/2) {
         console.error("th5: cons 1 con");
         return true;
