@@ -45,7 +45,7 @@ class Hero {
     }
     skill() {
         const skill = eval(`new ${this.id}_SKILL()`);
-        skill.addHero(this);
+        skill.addHero(this.clone());
         return skill;
     }
 

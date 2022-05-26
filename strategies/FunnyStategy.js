@@ -387,8 +387,8 @@ function loginfo(...args) {
         return true;
       }
       // attack
-      const damgeMetric = new AttackDamgeMetric();
-      const attackDame = 1 * damgeMetric.exec(futureState.matchSizeGem, myHeroAlive);
+      // const damgeMetric = new AttackDamgeMetric();
+      const attackDame = this.hero.attack;//1 * damgeMetric.exec(futureState.matchSizeGem, myHeroAlive);
         // nhung khong su dung trong truong hop dang co skill 
       if (enemyHeroAlive.hp <= attackDame && (!posibleSkillCasts || posibleSkillCasts.length == 0)) {
         console.error("th5: ", attackDame, enemyHeroAlive.id, enemyHeroAlive.hp);
