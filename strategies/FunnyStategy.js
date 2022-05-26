@@ -405,85 +405,94 @@ function loginfo(...args) {
     chooseBestPosibleMove(state, deep = 2, isIncludeEnemy = false) {
       const posibleGemSwaps = this.getAllPosibleGemSwap(state);
       const posibleSkillCasts = this.getAllPosibleSkillCast(state);
-      // 1 so truong hop loi the thi ve an gems
-      for (const move of posibleGemSwaps) {
-        const cloneState = state.clone();
-        const futureState = this.seeFutureState(move, cloneState, deep);
-        // neu enemy chet het thi return luon skill
-        // todo refactor dup code
-        if (futureState.isEnemyPlayerDie()) {
-          console.log("th4: chooseBestPosibleMove all die");
-          return move;
+      try {
+        // 1 so truong hop loi the thi ve an gems
+        for (const move of posibleGemSwaps) {
+          const cloneState = state.clone();
+          const futureState = this.seeFutureState(move, cloneState, deep);
+          // neu enemy chet het thi return luon skill
+          // todo refactor dup code
+          if (futureState.isEnemyPlayerDie()) {
+            console.log("th4: chooseBestPosibleMove all die");
+            return move;
+          }
+
+          if (futureState.isExtraTurn || futureState.preIsExtraTurn) {
+            return move;
+          }
+          
+          if (this.shouldUseSword(posibleSkillCasts, futureState, move)) {
+            return move;
+          }
         }
 
-        if (futureState.isExtraTurn || futureState.preIsExtraTurn) {
-          return move;
+        // end
+        loginfo(
+          `${FunnyStrategy.name}: posibleSkillCasts`, posibleSkillCasts
+        );
+        // priority cast skill// todo case swap better than skill
+        const skill = this.getSkillShouldCast(posibleSkillCasts, state.clone());
+        if (skill) {
+          return skill;
         }
-        
-        if (this.shouldUseSword(posibleSkillCasts, futureState, move)) {
-          return move;
+
+        // should remove
+        let currentBestMove = posibleGemSwaps[0];//todo get best
+        let currentBestMoveScore = -1;
+        loginfo('th3: posibleMoves', posibleGemSwaps);
+        let listFutureState = [];
+        for (const move of posibleGemSwaps) {
+          const cloneState = state.clone();
+          const futureState = this.seeFutureState(move, cloneState, deep);
+
+          // loginfo('', JSON.stringify(state), '--------', JSON.stringify(futureState), 'move', move);
+          const simulateMoveScore = this.compareScoreOnStates(state, futureState, move);
+
+          listFutureState.push({state: futureState, move, simulateMoveScore});
+          // compare score after swap
+          if (simulateMoveScore > currentBestMoveScore) {
+            currentBestMove = move;
+            currentBestMoveScore = simulateMoveScore;
+          }
         }
-      }
+        const listSolutions = listFutureState.filter(l => l.simulateMoveScore == currentBestMoveScore);
 
-      // end
-      loginfo(
-        `${FunnyStrategy.name}: posibleSkillCasts`, posibleSkillCasts
-      );
-      // priority cast skill// todo case swap better than skill
-      const skill = this.getSkillShouldCast(posibleSkillCasts, state);
-      if (skill) {
-        return skill;
-      }
-
-      // should remove
-      let currentBestMove = posibleGemSwaps[0];//todo get best
-      let currentBestMoveScore = -1;
-      loginfo('th3: posibleMoves', posibleGemSwaps);
-      let listFutureState = [];
-      for (const move of posibleGemSwaps) {
-        const cloneState = state.clone();
-        const futureState = this.seeFutureState(move, cloneState, deep);
-
-        // loginfo('', JSON.stringify(state), '--------', JSON.stringify(futureState), 'move', move);
-        const simulateMoveScore = this.compareScoreOnStates(state, futureState, move);
-
-        listFutureState.push({state: futureState, move, simulateMoveScore});
-        // compare score after swap
-        if (simulateMoveScore > currentBestMoveScore) {
-          currentBestMove = move;
-          currentBestMoveScore = simulateMoveScore;
-        }
-      }
-      const listSolutions = listFutureState.filter(l => l.simulateMoveScore == currentBestMoveScore);
-
-      console.log("th8: currentBestMoveScore", currentBestMoveScore, listSolutions);
-      // truong hop currentBestMoveScore co nhieu lua chon
-      // tinh toan ti le gio han doi phuong
-      if (isIncludeEnemy) {
-        // 1 so case can tinh nhieu solution hon
-        if (listSolutions && listSolutions.length) {
-          // the same score mana thi uu tien an kiem, hp, attack
-          let bestSwordOption = { size: 0, option: null }
-          for (let item of listSolutions) {
-            let currentScore = item.state.turnEffect.hp + item.state.turnEffect.attack * 2 + item.state.turnEffect.attackGem * 10;
-            if (currentScore > bestSwordOption.size) {
-              bestSwordOption.size = currentScore;
-              bestSwordOption.option = item.move;
+        console.log("th8: currentBestMoveScore", currentBestMoveScore, listSolutions);
+        // truong hop currentBestMoveScore co nhieu lua chon
+        // tinh toan ti le gio han doi phuong
+        if (isIncludeEnemy) {
+          // 1 so case can tinh nhieu solution hon
+          if (listSolutions && listSolutions.length) {
+            // the same score mana thi uu tien an kiem, hp, attack
+            let bestSwordOption = { size: 0, option: null }
+            for (let item of listSolutions) {
+              let currentScore = item.state.turnEffect.hp + item.state.turnEffect.attack * 2 + item.state.turnEffect.attackGem * 10;
+              if (currentScore > bestSwordOption.size) {
+                bestSwordOption.size = currentScore;
+                bestSwordOption.option = item.move;
+              }
             }
-          }
-          if (bestSwordOption.option) {
-            return bestSwordOption.option;
-          }
-          // k co kiem uu tien gem attack
-          // for (let item of ManaPriority) {
-          //   const movePriority = listSolutions.find(s => s.move.swap.type == item)
-          // }
+            if (bestSwordOption.option) {
+              return bestSwordOption.option;
+            }
+            // k co kiem uu tien gem attack
+            // for (let item of ManaPriority) {
+            //   const movePriority = listSolutions.find(s => s.move.swap.type == item)
+            // }
 
-          currentBestMove = this.getBestMoveWithEnemyAdvantage(listSolutions);
+            currentBestMove = this.getBestMoveWithEnemyAdvantage(listSolutions);
+          }
         }
-      }
 
-      return currentBestMove;
+        return currentBestMove;
+      } catch(ex) {
+        console.error("big error", ex);
+        if (posibleSkillCasts && posibleSkillCasts.length) {
+          return posibleSkillCasts[0];
+        }
+
+        return posibleGemSwaps[posibleGemSwaps.length - 1];
+      }
     }
   
     getBestMoveWithEnemyAdvantage(listState) {

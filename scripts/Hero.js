@@ -405,7 +405,7 @@ class BaseSkill {
           // kiem tra neu dang co skill thi doi buff dmg r ms cast
           if (item.hasSkill()) {
           // neu doi phuong dang co skill buff attack thi doi buff
-          console.log("th9: item.hasSkill()");
+            console.error("th9: item.hasSkill()");
             return new SkillTarget(null, true);
           }
           continue;
