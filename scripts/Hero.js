@@ -363,13 +363,14 @@ class BaseSkill {
       if (enemyHero) {
         enemyHeroAttack = this.hero.attack + state.grid.getNumberOfGemByType(GemType.RED);
       }
-      if (this.hero.hp > Math.max(enemyHeroAttack, enemyMaxAttack) + 3) {
-        // truong hop ma ben doi phuong co skill thi phai cast ngay
-        if (enemyHeros.find(h => h.hasSkill())) {
-          new SkillTarget(null, false);
-        }
+      const dmgHeros = ['SEA_SPIRIT', 'MONK'];
 
-        return new SkillTarget(null, true);
+      if (this.hero.hp > Math.max(enemyHeroAttack, enemyMaxAttack) + 3) {
+        // Chua danh chet dc
+        // check xem neu minh con dmgHeros thi doi
+        if (state.getCurrentPlayer().getHerosAlive().find(h => dmgHeros.includes(h.id) && h.isAlive())) {
+          return new SkillTarget(null, true);
+        }
       }
 
       return new SkillTarget(null, false);
@@ -432,21 +433,21 @@ class BaseSkill {
         }
       }
 
-      //neu giet chet duoc
-      //check co phai la ELIZAH la shouldKill va co full mana khong
-      const isElizahCanKill =
-        shouldKill.id === "ELIZAH" && shouldKill.maxMana === shouldKill.mana;
-      if (bestTake >= shouldKill.hp && !isElizahCanKill)
-        return new SkillTarget(shouldKill);
+      // //neu giet chet duoc
+      // //check co phai la ELIZAH la shouldKill va co full mana khong
+      // const isElizahCanKill =
+      //   shouldKill.id === "ELIZAH" && shouldKill.maxMana === shouldKill.mana;
+      // if (bestTake >= shouldKill.hp && !isElizahCanKill)
+      //   return new SkillTarget(shouldKill);
 
-      //co nen danh con dau tien khong?
-      const damegeFirstBot = firstHero.attack;
-      if (
-        enemyHeroAlive[0].hp - bestTake <= damegeFirstBot &&
-        !isElizahCanKill
-      ) {
-        return new SkillTarget(enemyHeroAlive[0]);
-      }
+      // //co nen danh con dau tien khong?
+      // const damegeFirstBot = firstHero.attack;
+      // if (
+      //   enemyHeroAlive[0].hp - bestTake <= damegeFirstBot &&
+      //   !isElizahCanKill
+      // ) {
+      //   return new SkillTarget(enemyHeroAlive[0]);
+      // }
 
       // uu tien kill
       //shouldKill = shouldKill ? shouldKill : enemyHeroAlive[0];
