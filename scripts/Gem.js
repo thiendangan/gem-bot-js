@@ -64,7 +64,7 @@ class Gem {
     }
 
     clone() {
-        const cloned = new Gem(this.index, this.type);
+        const cloned = new Gem(this.index, this.type, this.modifier);
         return cloned;
     }
 }

@@ -23,7 +23,7 @@ const BATTLE_MODE = "BATTLE_MODE";
 const ENEMY_PLAYER_ID = 0;
 const BOT_PLAYER_ID = 2;
 
-const delaySwapGem = 2000;
+const delaySwapGem = 3000;
 const delayFindGame = 5000;
 
 var sfs;
@@ -35,9 +35,11 @@ var currentPlayerId;
 var grid;
 
 const username = "thien.dang";
+const nickName = "5aesieunhan";
 const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzI4MjczNTcxNSwiZXhwIjoxNjU1MDgyNzM1fQ.hcScupwBmebBrdTXUNFwQes1Ba1k91PDdqmJvG2N4GVU2G28YhmTyXBoHIiy7loR6Pw-eLWiMaN9-gm-CiINqA";
 const tokenMap = {
-	"thien.dang": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzI4MjczNTcxNSwiZXhwIjoxNjU1MDgyNzM1fQ.hcScupwBmebBrdTXUNFwQes1Ba1k91PDdqmJvG2N4GVU2G28YhmTyXBoHIiy7loR6Pw-eLWiMaN9-gm-CiINqA",
+	"5aesieunhan": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI1YWVzaWV1bmhhbiIsImF1dGgiOiJST0xFX1VTRVIiLCJMQVNUX0xPR0lOX1RJTUUiOjE2NTM0ODkxNzA5MjUsImV4cCI6MTY1NTI4OTE3MH0.joDiOlGEkKDjgz9gO32tXS9VSGHbJl7oOvWSkEVzdbPDhiQR51cIjOWN1V1oKTYm9chzQ_Bv-VxjQMHzsahPKQ",
+	"thien.dang": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzYxMjQ1ODk5OSwiZXhwIjoxNjU1NDEyNDU4fQ.vv5wt44A13UzBAkqoTdxKSV2MeTR8odvQELI5f85K03II2mP4tVU1xmunWPBBYPThOkU-KFp-F6DpMX3I_1w5g",
 	"duy.nguyenvan": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkdXkubmd1eWVudmFuIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzMxNTY4NTc5NywiZXhwIjoxNjU1MTE1Njg1fQ.rnXFlX7rY8AMp6wSWkeyYphl0Ia9eGmD9LtM4gzWmKv8Cp5RWqzQhvZT0XHglrVc9Pe7PTqbZ7Xl6rnJF71sQA"
 };
 var visualizer = new Visualizer({ el: '#visual' });
@@ -187,7 +189,7 @@ function onLoginBtnClick() {
 	let data = new SFS2X.SFSObject();
 	data.putUtfString("BATTLE_MODE", "NORMAL");
 	data.putUtfString("ID_TOKEN", tokenMap[uName]);
-	data.putUtfString("NICK_NAME", uName);
+	data.putUtfString("NICK_NAME", nickName);
 
 	var isSent = sfs.send(new SFS2X.LoginRequest(uName, "", data, "gmm"));
 
@@ -373,8 +375,9 @@ function SendFinishTurn(isFirstTurn) {
 
 }
 
-
+var StartTurnCount = 1;
 function StartTurn(param) {
+	console.log("th10: on start StartTurn", StartTurnCount, new Date());
 	currentPlayerId = param.getInt("currentPlayerId");
 	visualizer.snapShot();
 
@@ -383,10 +386,15 @@ function StartTurn(param) {
 			trace("not isBotTurn");
 			return;
 		}
+		console.log("th10: start StartTurn", StartTurnCount, new Date());
 
-		if (strategy) {
-			strategy.playTurn();
-			return;
+		try {
+			if (strategy) {
+				strategy.playTurn();
+				return;
+			}
+		} catch(ex) {
+			console.error(ex, "the big error");
 		}
 		let heroFullMana = botPlayer.anyHeroFullMana();
 		if (heroFullMana != null) {
@@ -395,14 +403,13 @@ function StartTurn(param) {
 			SendSwapGem()
 		}
 
-	}, delaySwapGem);
+	}, delaySwapGem + 300);
+	StartTurnCount++;
 }
 
 function isBotTurn() {
 	return botPlayer.playerId == currentPlayerId;
 }
-
-
 
 function SendCastSkill(heroCastSkill, { targetId, selectedGem, gemIndex, isTargetAllyOrNot } = {}) {
 	var data = new SFS2X.SFSObject();
@@ -488,7 +495,7 @@ function HandleGems(paramz) {
 	console.log("gemModifiers : ", gemModifiers);
 
 	grid.updateGems(gemCode, gemModifiers);
-
+	console.log("th10: done update", new Date());
 	setTimeout(function () { SendFinishTurn(false) }, delaySwapGem);
 }
 

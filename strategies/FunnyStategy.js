@@ -1,5 +1,5 @@
 function loginfo(...args) {
-    console.log('aot: ', ...args);
+    // console.log('aot: ', ...args);
   }
   class AotGameState {
     constructor({ game, grid, botPlayer, enemyPlayer }) {
@@ -8,10 +8,11 @@ function loginfo(...args) {
       this.botPlayer = botPlayer;
       this.enemyPlayer = enemyPlayer;
       this.distinctions = [];
-    }
-  
-    isExtraturn() {
-      return this.hasExtraTurn;
+      this.isExtraTurn = false;
+      this.preIsExtraTurn = false;
+      this.matchSizeGem = 0;
+      this.swordCount = 0;
+      this.turnEffect = { hp: 0, attack: 0, attackGem: 0 }
     }
   
     switchTurn() {
@@ -27,11 +28,14 @@ function loginfo(...args) {
     getCurrentEnemyPlayer() {
       return this.enemyPlayer;
     }
-  
+    isEnemyPlayerDie() {
+      return !this.enemyPlayer.firstHeroAlive();
+    }
+
     addDistinction(result) {
       this.distinctions.push(result);
     }
-  
+
     clone() {
       const game = this.game;
       const grid = this.grid.clone();
@@ -51,284 +55,18 @@ function loginfo(...args) {
     constructor(hero) {
       super();
       this.hero = hero;
-      this.skill = SkillFactory.getSkillByHero(hero);
     }
   }
-  
-  class SkillFactory {
-    static getSkillByHero(hero) {
-      const skillName = hero.id;
-      const skill = eval(`new ${skillName}_SKILL()`);
-      skill.AddHero(hero);
-      return skill;
-    }
-  }
-  
-  class BaseSkill {
-    AddHero(hero) {// todo
-      this.hero = hero;
-    }
-  
-    getScore(state) {
-      return 5;
-    }
-  
-    applySkill(state) {
-      // todo apply skill logic
-      // should remove
-      // other case for skill
-  
-    }
-    getTarget(posibleSkillCasts, state) {
-      return { skillScore: 1, targetId: null};
-    }
-  
-    takeDamgeEnemies(state, attack, numOfEnemies = 10) {
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-      let heroLenth = 0;
-      for (const hero of enemyHeroAlive) {
-        heroLenth++;
-        if (heroLenth > numOfEnemies) break;
-        hero.takeDamge(attack);
-      }
-    }
     
-    increaseAttributeAllies(state, data = {
-      hp: 0, attack: 0
-    }, numOfHero = 10) {
-      let heroLenth = 0;
-      const heroAlives = state.getCurrentPlayer().getHerosAlive();
-      for (const hero of heroAlives) {
-        heroLenth++;
-        if (heroLenth > numOfHero) break;
-        hero.updateHeroLocal({
-          hp: hero.hp + data.hp,
-          attack: hero.attack + data.attack,
-          mana: hero.mana,
-          maxMana: hero.maxMana
-        })
-      }
-    }
-  }
-  
-  class THUNDER_GOD_SKILL extends BaseSkill {
-    applySkill(state) {// todo apply skill logic
-      // "Chain Lighning 
-      // Deal damage to all enemies, based on his current Attack Attribute and 
-      // Number of Light Gems on the Board"
-      let attack = this.hero.attack;
-      let currentRedGem = state.grid.getNumberOfGemByType(GemType.SWORD);
-      this.takeDamgeEnemies(state, attack + currentRedGem);
-    }
-    
-    getScore(state) {
-      let currentRedGem = state.grid.getNumberOfGemByType(GemType.SWORD);
-      let attack = this.hero.attack + currentRedGem;
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-  
-      return attack * enemyHeroAlive.length;
-    }
-  }
-  class MONK_SKILL extends BaseSkill {
-    applySkill(state) {
-    // "Bless of Light 
-    // Add 8 atttack damage to all Allies"
-      this.increaseAttributeAllies(state, {
-        hp: 0, attack: 8
-      })
-    }
-    
-    getScore(state) {
-        const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-        if (!enemyHeroAlive.find(hero => hero.hp > this.hero.attack)) {
-            return -500;
-        }
-        return 10;
-    }
-  
-    getTarget(posibleSkillCasts, state) {// priority 1 -> 10
-      const heroAlive = state.getCurrentPlayer().getHerosAlive();
-      const skillScore = 1;
-      if (heroAlive[0].attack < 14) {
-        skillScore += 10;// max priority
-      }
-      return { skillScore, targetId: null};
-    }
-  }
-  class AIR_SPIRIT_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Wind force 
-      // Deal damage to all enemies and blow away a selected gem area in the board."
-      this.takeDamgeEnemies(state, this.hero.attack);
-      // todo: blow away a selected gem area in the board.
-    }
-    
-    getScore(state) {
-      let attack = this.hero.attack;
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-      return attack * enemyHeroAlive.length;
-    }
-  }
-  class SEA_GOD_SKILL extends BaseSkill {
-  
-    applySkill(state) {
-      // "Earth shock
-      // Deal damage to all enemies and reduce their mana"
-      this.takeDamgeEnemies(state, this.hero.attack);
-      // todo: reduce their mana
-      this.increaseAttributeAllies(state, {
-        hp: 1, attack: 0
-      })
-    }
-    
-    getScore(state) {
-      const heroAlive = state.getCurrentPlayer().getHerosAlive();
-      return this.hero.hp * heroAlive.length;
-    }
-  }
-  class MERMAID_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Charge
-      // Deal damage to all enemies based on her current Attack atrribute. Increase her Attack"
-      this.takeDamgeEnemies(state, this.hero.attack);
-      // todo: Increase her Attack
-      this.increaseAttributeAllies(state, {
-        hp: 0, attack: 1
-      })
-    }
-  
-    getScore(state) {
-      const heroAlive = state.getCurrentPlayer().getHerosAlive();
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-  
-      return this.hero.attack * enemyHeroAlive.length + heroAlive.length;
-    }
-  }
-  class SEA_SPIRIT_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Focus
-      // Increase [An allied hero]'s Attack and Health by 5 Hp. Gain an extra turn."
-      this.increaseAttributeAllies(state, {// todo: should choose right hero base on current attr
-        hp: 5, attack: 5
-      }, 1)
-      // todo: Gain an extra turn.
-    }
-    
-    getScore(state) {
-      const heroAlive = state.getCurrentPlayer().getHerosAlive();
-  
-      return 10 * heroAlive.length;
-    }
-  }
-  class FIRE_SPIRIT_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Volcano's wrath
-      // Deal damage to an enemy based on their current Attack and number of  Red Gems on the board."
-      let attack = this.hero.attack;
-      let currentRedGem = state.grid.getNumberOfGemByType(GemType.RED);
-      this.takeDamgeEnemies(state, attack + currentRedGem, 1);
-    }
-    
-    getScore(state) {
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();// todo taget
-      let currentRedGem = state.grid.getNumberOfGemByType(GemType.RED);
-      let attack = this.hero.attack + currentRedGem;
-      
-      return attack * enemyHeroAlive.length;
-    }
-    getTarget(posibleSkillCasts, state) {
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();// todo taget
-      const attackBuff = ['MONK', 'SEA_SPIRIT'];
-      let shouldKill = null;
-      for (const item of enemyHeroAlive) {
-        if (attackBuff.indexOf(item.id) > -1) {
-        //   return { targetId: item.id };
-            continue;
-        }
-        if (!shouldKill) {
-            shouldKill = item;
-        }
-        const attack = item.attack + state.grid.getNumberOfGemByType(GemType.RED) + this.hero.attack;// item.attack
-        if (item.hp <= attack && shouldKill.hp < item.hp) {
-          // should kill
-          shouldKill = item;
-        }
-      }
-      // uu tien kill
-      shouldKill = shouldKill ? shouldKill : enemyHeroAlive[0];
-  
-      return { targetId: shouldKill.id };
-    }
-  }
-  class CERBERUS_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Cerberus's bite 
-      // Deal damage to All enemies and increase it's attack"
-      this.takeDamgeEnemies(state, this.hero.attack);
-      // todo: Increase her Attack
-      this.increaseAttributeAllies(state, {
-        hp: 0, attack: 1
-      })
-    }
-    
-    getScore(state) {
-      const enemyHeroAlive = state.getCurrentEnemyPlayer().getHerosAlive();
-      const heroAlive = state.getCurrentPlayer().getHerosAlive();
-  
-      return this.hero.attack * enemyHeroAlive.length + heroAlive.length;
-    }
-  }
-  class DISPATER_SKILL extends BaseSkill {
-    applySkill(state) {
-      // "Death's touch
-      // Deal damage to an enemy, with 25% chance to instant kill the enemy. 
-      // If skill failed to instant kill enemy, gain extra turn, and next cast gonna have 50% insteed."
-      this.takeDamgeEnemies(state, this.hero.attack + 5, 1);
-    }
-    
-    getScore(state) {
-      return 10;
-    }
-  }
-  class ELIZAH_SKILL extends BaseSkill {
-  
-    applySkill(state) {
-      // todo apply skill logic
-      // "Resurection
-      // If killed with full mana, respawn with full HP. This skill is passive, automatic active."
-      this.increaseAttributeAllies(state, {
-        hp: 10,
-        attack: 0
-      }, 1);
-    }
-    
-    getScore(state) {
-      return 10;
-    }
-  }
-  class SKELETON_SKILL extends BaseSkill {
-  
-    applySkill(state) {
-      // todo apply skill logic
-      // "Soul Swap
-      // Swap your HP with the target hero's HP (can target heroes on both sides)"
-      this.increaseAttributeAllies(state, {
-        hp: 10,
-        attack: 0
-      }, 1);
-    }
-    
-    getScore(state) {
-      return 10;
-    }
-  }
-  
   class AotSwapGem extends AotMove {
     type = "SWAP_GEM";
     isSwap = true;
     constructor(swap) {
       super();
       this.swap = swap;
+    }
+    clone() {
+      return new AotSwapGem(this.swap.clone());
     }
   }
   
@@ -348,7 +86,10 @@ function loginfo(...args) {
   
   class AttackDamgeMetric extends ScaleFn {
     exec(gem, hero) {
-      return (gem - 3) * hero.attack + hero.attack;
+      let attack = hero.attack + (gem-3) * 5;
+      // if(gem > 3) attack += 5;
+
+      return attack;
     }
   }
   
@@ -360,7 +101,7 @@ function loginfo(...args) {
   
   class GameSimulator {
     constructor(state) {
-      this.state = state;
+      this.state = state.clone();
     }
   
     getState() {
@@ -371,7 +112,7 @@ function loginfo(...args) {
       if (move.isSwap) {
         this.applySwap(move);
       } else if (move.isCastSkill) {
-        this.applyCastSkill(move);
+        // this.applyCastSkill(move);
       }
       return this;
     }
@@ -380,6 +121,8 @@ function loginfo(...args) {
       const { swap } = move;
       const { index1, index2 } = swap;
       const result = this.state.grid.performSwap(index1, index2);
+      loginfo("th3: performSwap", result);
+
       this.applyDistinctionResult(result);
       return result;
     }
@@ -388,38 +131,87 @@ function loginfo(...args) {
       this.turnEffect = {
         attackGem: 0,
         manaGem: {},
+        hp: 0,
+        attack: 0,
+        buffMana(type, n = 1) {
+          this.manaGem[type] =
+                (this.manaGem[type] || 0) + n;
+        }
       };
-  
+      // all match gems
+      let matchSizeGem = 0;
+
       for (const batch of result) {
         if (batch.isExtraTurn) {
-          loginfo('th3: batch.isExtraTurn', batch.isExtraTurn)
+          loginfo('th3: isExtraTurn', batch.isExtraTurn)
           this.state.isExtraTurn = true;
-          this.hasExtraTurn = true;
         }
-  
+        let swordCount = 0;
         for (const gem of batch.removedGems) {
+          matchSizeGem++;
           switch (gem.type) {
             case GemType.SWORD: {
-              this.turnEffect.attackGem += 1;
+              swordCount++;
+              break;
             }
             default: {
-              this.turnEffect.manaGem[gem.type] =
-                (this.turnEffect.manaGem[gem.type] || 0) + 1;
+              this.turnEffect.buffMana(gem.type);
             }
           }
+          switch (gem.modifier) {
+            case GemModifier.MANA: {
+              // +1 mana all gem
+              this.turnEffect.buffMana(GemType.GREEN);
+              this.turnEffect.buffMana(GemType.YELLOW);
+              this.turnEffect.buffMana(GemType.RED);
+              this.turnEffect.buffMana(GemType.PURPLE);
+              this.turnEffect.buffMana(GemType.BLUE);
+              this.turnEffect.buffMana(GemType.BROWN);
+            }
+            case GemModifier.HIT_POINT: {
+              // Tăng HP cho người chơi hiện tại khi nổ (+3 hp/hero)
+              this.turnEffect.hp += 3;
+            }
+            case GemModifier.BUFF_ATTACK: {
+              // Tăng HP cho người chơi hiện tại khi nổ (+3 attack/hero)
+              this.turnEffect.attack += 3;
+            }
+            default: {
+              
+            }
+          }
+        }
+        this.state.swordCount = swordCount;
+        if (swordCount >= 3) {
+          this.turnEffect.attackGem += swordCount;
         }
       }
       this.applyTurnEffect(this.turnEffect);
       this.state.addDistinction(result);
+      this.state.matchSizeGem = matchSizeGem;
+      this.state.turnEffect = this.turnEffect;
     }
   
     applyTurnEffect(turn) {
       this.applyAttack(turn.attackGem);
+      this.applyAddHp(turn.hp);
+      this.applyAddAttack(turn.attack);
       for (const [type, value] of Object.entries(turn.manaGem)) {
         this.applyMana(type, value);
       }
     }
-  
+    applyAddHp(hp) {
+      const myHerosAlive = this.state.getCurrentPlayer().getHerosAlive();
+      for (const hero of myHerosAlive) {
+        hero.buffHp(hp);
+      }
+    }
+    applyAddAttack(attack) {
+      const myHerosAlive = this.state.getCurrentPlayer().getHerosAlive();
+      for (const hero of myHerosAlive) {
+        hero.buffAttack(attack);
+      }
+    }
     applyAttack(attackGem) {
       const myHeroAlive = this.state.getCurrentPlayer().firstHeroAlive();
       const damgeMetric = new AttackDamgeMetric();
@@ -435,8 +227,8 @@ function loginfo(...args) {
       if (firstAliveHeroCouldReceiveMana) {
         const maxManaHeroCannCeceive =
           firstAliveHeroCouldReceiveMana.getMaxManaCouldTake();
-        const manaToSend = Math.max(value, maxManaHeroCannCeceive);
-        firstAliveHeroCouldReceiveMana.takeMana(manaToSend);
+        const manaToSend = Math.min(value, maxManaHeroCannCeceive);
+        firstAliveHeroCouldReceiveMana.buffMana(manaToSend);
   
         const manaRemains = value - manaToSend;
         if (manaRemains > 0) {
@@ -447,9 +239,9 @@ function loginfo(...args) {
     }
   
     applyCastSkill(move) {
-      loginfo('th3: applyCastSkill', move);
+      // loginfo('th3: applyCastSkill', move);
       // cacl damage take 
-      // move.skill.applySkill(this.state);
+      move.hero.skill().applySkill(this.state);
     }
   }
   
@@ -457,33 +249,32 @@ function loginfo(...args) {
     score = 0;
     sumMetric = new SumScale();
     hpMetric = new LinearScale(1, 0);
-    attackMetric = new LinearScale(1.5, 0);
+    attackMetric = new LinearScale(0.001, 0);
     manaMetric = new LinearScale(1.5, 0);
     maxManaMetric = new LinearScale(0, 3);
     overManaMetric = new LinearScale(-1, 0);
   
     caclcHeroManaScore(hero, state) {
-      const skillScore = SkillFactory.getSkillByHero(hero).getScore(state);
-      loginfo('th3: skillScore', hero.id, skillScore);
-      return ((hero.mana + 1)/hero.maxMana) * skillScore;
+      const skillScore = hero.skill().getScore(state);
+      // loginfo('th3: skillScore', hero.id, skillScore);
+      // ??? mana = 0
+      // console.log("th6: ", hero.mana, hero.maxMana, skillScore, hero.id, hero.mana * skillScore);
+      return (hero.mana + 0.1/hero.maxMana) * skillScore;
     }
+
     caclcHeroScore(hero, state) {
-      const hpScore = this.hpMetric.exec(hero.hp);// 1. hp nhieu score nhieu
+      // const hpScore = 0;//this.hpMetric.exec(hero.hp);// 1. hp nhieu score nhieu
       const manaScore = this.caclcHeroManaScore(hero, state);// 2. mana tien toi max thi score cao
-      const overManaScore = this.overManaMetric.exec(0);// todo
+      // const overManaScore = this.overManaMetric.exec(0);// todo
       // attack
-      const attackScore = this.attackMetric.exec(0);
+      // const attackScore = this.attackMetric.exec(0);
       // 3. attack cao thi score cao, 
       // 
-      loginfo('th3: HeroScore', {hpScore, manaScore, overManaScore, attackScore})
-      const heroScore = this.sumMetric.exec(
-        hpScore, manaScore, overManaScore, attackScore);
+      // loginfo('th3: HeroScore', {hpScore, manaScore, overManaScore, attackScore})
+      // const heroScore = this.sumMetric.exec(
+      //   hpScore, manaScore, overManaScore, attackScore);
       
-      return heroScore;
-    }
-  
-    calcExtraScore(state) {// dont relate to hero
-      return state.isExtraturn() ? 100 : 0;
+      return manaScore;
     }
   
     calcScoreOfPlayer(player, state) {
@@ -494,10 +285,10 @@ function loginfo(...args) {
     }
   
     calc(state) {
-      const extraScore = this.calcExtraScore(state);
-      const myScore = this.calcScoreOfPlayer(state.getCurrentPlayer(), state) + extraScore;
+      // loginfo("th3: move.swap.sizeMatch/20", move.swap.sizeMatch/20);
+      let myScore = this.calcScoreOfPlayer(state.getCurrentPlayer(), state);
+      myScore += (state.matchSizeGem||0)/100;// neu state sau co luong remove cao hon thi cong diem
       const enemyScore = this.calcScoreOfPlayer(state.getCurrentEnemyPlayer(), state);
-      loginfo('th3: myScore', extraScore, myScore, enemyScore);
   
       const score = myScore - enemyScore;
       return score;
@@ -521,10 +312,11 @@ function loginfo(...args) {
     playTurn() {
       loginfo(`th3: playTurn`);
       const state = this.getCurrentState();
-      const action = this.chooseBestPosibleMove(state, 1);
+      // wait// done update gem
+      const action = this.chooseBestPosibleMove(state, 1, true);
       loginfo(`th3: end playTurn`);
       if (action.isCastSkill) {
-        loginfo(`${FunnyStrategy.name}: isCastSkill`);
+        loginfo(`th3: isCastSkill`);
         this.castSkillHandle(action.hero, { 
           targetId: action.targetId, 
           selectedGem: action.selectedGem, 
@@ -532,7 +324,7 @@ function loginfo(...args) {
           // isTargetAllyOrNot: 
         });// ytodo cast with target
       } else if (action.isSwap) {
-        loginfo(`${FunnyStrategy.name}: isSwap`);
+        loginfo(`th3: isSwap`);
         this.swapGemHandle(action.swap);
       }
       loginfo(`th3: end all playTurn`);
@@ -542,24 +334,40 @@ function loginfo(...args) {
       // loginfo(`${FunnyStrategy.name}: getCurrentState`);
       return this.state.clone();
     }
-    getSkillShouldCast(posibleSkillCasts, state) {
+    getSkillShouldCast(posibleGemSwaps, posibleSkillCasts, state) {
       let skill = null;
-      for (const move of posibleSkillCasts) {
-        skill = move;
-        if (['MONK'].indexOf(move.hero.id) > -1) {
-            if (move.skill.getScore(state) > 0) {
-                return move;
-            }
+      let currentScore = 0;
+      // get skill SEA_SPIRIT neu co
+      const seaSprit = posibleSkillCasts.find(h => h.hero.id == 'SEA_SPIRIT');
+      if (seaSprit) {// todo damage > thi k an skill uu tien cai khac
+        const { hero, dontCast } = seaSprit.hero.skill().getTarget(posibleGemSwaps, posibleSkillCasts, state);
+        if (!dontCast) {
+          // dontCast
+          seaSprit.targetId = hero.id;
+          return seaSprit;
         }
-        if (['FIRE_SPIRIT'].indexOf(move.hero.id) > -1) {
-          const { targetId } = move.skill.getTarget(posibleSkillCasts, state);
-          move.targetId = targetId;
-          return move;
-        }
-        if (['SEA_GOD'].indexOf(move.hero.id) > -1) {
-            return move;
-        }
+      }
 
+      for (const move of posibleSkillCasts) {
+        const { hero, dontCast } = move.hero.skill().getTarget(posibleGemSwaps, posibleSkillCasts, state);
+        if (dontCast) {
+          // dontCast
+          continue;
+        }
+        skill = move;
+        const targetId = hero?.id;
+        // todo
+        move.targetId = targetId;
+        // if (["SEA_SPIRIT"].includes(targetId)) {
+        //   return move;
+        // }
+        const { hp, mana} = move.hero.skill().getDamage(state);
+        const skillScore = hp + mana/3;// todo this
+
+        if (skillScore > currentScore) {
+          currentScore = skillScore;
+          skill = move;
+        }
         // const { skillScore, targetId } = move.skill.getScoreAndTarget(state, posibleGemSwaps);
         // if (skillScore > bestScore) {
         //   bestScore = skillScore;
@@ -567,123 +375,205 @@ function loginfo(...args) {
         //   move.targetId = targetId;
         // }
       }
-  
-      return null;
+      
+      return skill;
     }
-    chooseBestPosibleMove(state, deep = 2) {
+    
+    shouldUseSword(posibleSkillCasts, futureState, move) {
+      let swords = Array.from(move.swap.matchGems).filter(g => g.type == GemType.SWORD);
+      if (!swords || swords.length < 3) {
+        return false;
+      }
+      const myHeroAlive = futureState.getCurrentPlayer().firstHeroAlive();
+      const enemyHerosAlive = futureState.getCurrentEnemyPlayer().getHerosAlive();
+      let enemyHeroAlive = enemyHerosAlive[0];
+      if (enemyHerosAlive.length == 1 && myHeroAlive.attack >= enemyHerosAlive[0].hp/2) {
+        console.warn("cons 1 con");
+        return true;
+      }
+      let matchSizeGem = swords.length;
+
+      // if (futureState.matchSizeGem > 4) {// truong hop hon 5 1 turn thi vao bonus
+      //   // truong hop vao kiem turn sau// todo dang k tinh dc
+      //   return false;
+      // }
+      // attack
+      const damgeMetric = new AttackDamgeMetric();
+      const attackDame = 1 * damgeMetric.exec(matchSizeGem, myHeroAlive);//myHeroAlive.attack;//
+        // nhung khong su dung trong truong hop dang co skill 
+      if (enemyHeroAlive.hp <= attackDame && (!posibleSkillCasts || posibleSkillCasts.length == 0)) {
+        console.error("th5: ", attackDame, enemyHeroAlive.id, enemyHeroAlive.hp, futureState.matchSizeGem);
+        return true;
+      }
+
+      // let priorityHero = ['ELIZAH', 'THUNDER_GOD'];
+      // if (priorityHero.includes(enemyHeroAlive.id) && enemyHeroAlive.isFullMana()) {
+      //   return false;
+      // }
+
+      return false;
+    }
+    chooseBestPosibleMove(state, deep = 2, isIncludeEnemy = false) {
       const posibleGemSwaps = this.getAllPosibleGemSwap(state);
-        // loginfo(`${FunnyStrategy.name}: chooseBestPosibleMove`);
-      // gem dac biet uu tien
-      const adGem =  posibleGemSwaps.find(gemInfo => gemInfo.swap.hasADGem());
-      if (adGem) {
-          loginfo("th3: adGem", adGem);
-          return adGem;
-      }
-      // if bonus turn uu tien
-      const bigGemSize = posibleGemSwaps.find(gemInfo => gemInfo.swap.sizeMatch > 4);
-      if (bigGemSize) {
-        loginfo("th3: bigGemSize", bigGemSize);
-        return bigGemSize;
-      }
-      // if find hero mana <= attack ==> kill first // skill kill > 1 thi dung skill 
-      const swordType = posibleGemSwaps.filter(gemInfo => gemInfo.swap.type == GemType.SWORD).sort(function(a, b) { 
-        return b.swap.sizeMatch - a.swap.sizeMatch;
-      });
-      //
-      if (swordType && swordType.length > 0) {
-        const myHeroAlive = this.state.getCurrentPlayer().firstHeroAlive();
-        const damgeMetric = new AttackDamgeMetric();
-        const attackDame = 1 * damgeMetric.exec(swordType[0].swap.sizeMatch, myHeroAlive);
-        const enemyHeroAlive = this.state.getCurrentEnemyPlayer().firstHeroAlive();
-        loginfo("th3: swordType", swordType, attackDame);
-        if (enemyHeroAlive.hp <= attackDame) {
-          loginfo("th3: case uu tien dung kiem kill");
-          return swordType[0];
-        }
-      }
-  
       const posibleSkillCasts = this.getAllPosibleSkillCast(state);
-      loginfo(
-        `${FunnyStrategy.name}: posibleSkillCasts`, posibleSkillCasts
-      );
-      // priority cast skill// todo case swap better than skill
-      const skill = this.getSkillShouldCast(posibleSkillCasts, state);
-      if (skill) {
-        return skill;
-      }
+      // try {
+        // 1 so truong hop loi the thi ve an gems
+        for (const move of posibleGemSwaps) {
+          const cloneState = state.clone();
+          const futureState = this.seeFutureState(move, cloneState, deep);
+          // neu enemy chet het thi return luon skill
+          // todo refactor dup code
+          if (futureState.isEnemyPlayerDie()) {
+            // console.log("th4: chooseBestPosibleMove all die");
+            return move;
+          }
 
-      const myHeroAlive = this.state.getCurrentPlayer().firstHeroAlive();
-      // attack < 13 dung gem green + yellow
-      if (myHeroAlive.attack < 14) {
-        const greenYellowType = posibleGemSwaps.filter(gemInfo => [GemType.GREEN, GemType.YELLOW].includes(gemInfo.swap.type)).sort(function(a, b) { 
-            return b.swap.sizeMatch - a.swap.sizeMatch;
-        });
-        if (greenYellowType.length > 0) {
-            return greenYellowType[0];
-        }
-      }
-      // attack < 13 dung gem green + yellow
-        const greenYellowType = posibleGemSwaps.filter(gemInfo => [GemType.BLUE, GemType.BROWN].includes(gemInfo.swap.type)).sort(function(a, b) { 
-            return b.swap.sizeMatch - a.swap.sizeMatch;
-        });
-        if (greenYellowType.length > 0) {
-            return greenYellowType[0];
+          if (futureState.isExtraTurn || futureState.preIsExtraTurn) {
+            return move;
+          }
+          
+          if (this.shouldUseSword(posibleSkillCasts, futureState, move)) {
+            return move;
+          }
         }
 
-    //   return posibleGemSwaps[0];
-      // get best move from feature
-      // should remove
-      let currentBestMove = posibleGemSwaps[0];//todo get best
+        // end
+        loginfo(
+          `${FunnyStrategy.name}: posibleSkillCasts`, posibleSkillCasts
+        );
+        // priority cast skill// todo case swap better than skill
+        const skill = this.getSkillShouldCast(posibleGemSwaps, posibleSkillCasts, state.clone());
+        if (skill) {
+          return skill;
+        }
+
+        // should remove
+        let currentBestMove = posibleGemSwaps[0];//todo get best
+        let currentBestMoveScore = -1;
+        let listFutureState = [];
+        for (const move of posibleGemSwaps) {
+          const cloneState = state.clone();
+          const futureState = this.seeFutureState(move, cloneState, deep);
+
+          // loginfo('', JSON.stringify(state), '--------', JSON.stringify(futureState), 'move', move);
+          const simulateMoveScore = this.compareScoreOnStates(state, futureState, move);
+
+          listFutureState.push({state: futureState, move, simulateMoveScore});
+          // compare score after swap
+          if (simulateMoveScore > currentBestMoveScore) {
+            currentBestMove = move;
+            currentBestMoveScore = simulateMoveScore;
+          }
+        }
+        const listSolutions = listFutureState.filter(l => l.simulateMoveScore == currentBestMoveScore);
+
+        // truong hop currentBestMoveScore co nhieu lua chon
+        // tinh toan ti le gio han doi phuong
+        if (isIncludeEnemy) {
+          // 1 so case can tinh nhieu solution hon
+          if (listSolutions && listSolutions.length) {
+            // the same score mana thi uu tien an kiem, hp, attack
+            let bestSwordOption = { size: 0, option: null }
+            for (let item of listSolutions) {
+              let currentScore = item.state.turnEffect.hp + item.state.turnEffect.attack * 2 + item.state.turnEffect.attackGem * 10;
+              if (currentScore > bestSwordOption.size) {
+                bestSwordOption.size = currentScore;
+                bestSwordOption.option = item.move;
+              }
+            }
+            if (bestSwordOption.option) {
+              return bestSwordOption.option;
+            }
+            // k co kiem uu tien gem attack
+            // for (let item of ManaPriority) {
+            //   const movePriority = listSolutions.find(s => s.move.swap.type == item)
+            // }
+
+            currentBestMove = this.getBestMoveWithEnemyAdvantage(listSolutions);
+          }
+        }
+
+        return currentBestMove;
+      // } catch(ex) {
+      //   console.error("big error", ex);
+      //   if (posibleSkillCasts && posibleSkillCasts.length) {
+      //     return posibleSkillCasts[0];
+      //   }
+
+      //   return posibleGemSwaps[posibleGemSwaps.length - 1];
+      // }
+    }
+  
+    getBestMoveWithEnemyAdvantage(listState) {
+      let enemyScore = 100;
+      let bestMove = listState[0];
+      loginfo("th4 getBestMoveWithEnemyAdvantage", listState);
+      for (const wState of listState) {
+        const cloneState = wState.state.clone();
+        cloneState.switchTurn();
+        const tempEnemyScore = this.getEnemyScoreFromState(cloneState);
+          if (tempEnemyScore < enemyScore) {
+            enemyScore = tempEnemyScore;
+            bestMove = wState.move;
+          }
+      }
+
+      return bestMove;
+    }
+
+    getEnemyScoreFromState(state) {
+      const posibleGemSwaps = this.getAllPosibleGemSwap(state);
+      // 1 so truong hop loi the thi ve an gems
       let currentBestMoveScore = -1;
-      loginfo('th3: posibleMoves', posibleGemSwaps);
       for (const move of posibleGemSwaps) {
-        const cloneState = state.clone();
-        const futureState = this.seeFutureState(move, cloneState, deep);
-        // loginfo('', JSON.stringify(state), '--------', JSON.stringify(futureState), 'move', move);
-        const simulateMoveScore = this.compareScoreOnStates(state, futureState);
-        // compare score after swap
+        if (!move) {
+          console.warn("move warning null");
+          continue;
+        }
+        const futureState = this.applyMoveOnState(move, state);
+        if (futureState.isExtraTurn || futureState.preIsExtraTurn) {
+          return 99;
+        }
+        // mana apply
+        const simulateMoveScore = this.compareScoreOnStates(state, futureState, move);
         if (simulateMoveScore > currentBestMoveScore) {
-          currentBestMove = move;
           currentBestMoveScore = simulateMoveScore;
         }
       }
-      loginfo('th3: end posibleMoves', posibleGemSwaps);
-  
-      return currentBestMove;
+
+      return currentBestMoveScore;
     }
-  
-    getScoreOnNextMove() {
-      const futureState = this.applyMoveOnState(move, state);
-      
-      if (futureState.isExtraturn()) {
-        loginfo('th3', 'new turn', futureState);
-        // duoc them turn thi cu chon ==> 100 point
-        return 1000;
-      }
-    }
-  
+
     seeFutureState(move, state, deep) {
-      if (deep === 0) {
+      if (deep === 0 || !move) {
         return state;
       }
-  
-      const futureState = this.applyMoveOnState(move, state);
-      if (futureState.isExtraturn()) {
-        const newMove = this.chooseBestPosibleMove(futureState, deep);
-        return this.seeFutureState(newMove, futureState, deep);
+      if (state.isEnemyPlayerDie()) {
+        return state;
       }
+
+      const futureState = this.applyMoveOnState(move, state);
+      if (futureState.isEnemyPlayerDie()) {
+        return futureState;
+      }
+
+      // if (futureState.isExtraTurn) {
+      //   const newMove = this.chooseBestPosibleMove(futureState, deep);
+      //   return this.seeFutureState(newMove.clone(), futureState, deep);
+      // }
       const newMove = this.chooseBestPosibleMove(futureState, deep - 1);
+      if (state.isExtraTurn) {// todo check
+        futureState.preIsExtraTurn = true;
+      }
       return this.seeFutureState(newMove, futureState, deep - 1);
     }
   
-    compareScoreOnStates(state1, state2) {// state1 old, state2 features
+    compareScoreOnStates(state1, state2, move) {// state1 old, state2 features
       // loginfo(`${FunnyStrategy.name}: compareScoreOnState`);
       const score1 = this.caculateScoreOnState(state1);
-      loginfo(`th3: compareScoreOnState score1 ${score1}`);
   
       const score2 = this.caculateScoreOnState(state2);
-      loginfo(`th3: compareScoreOnState score2 ${score2}`);
-  
+      // score2 - score1 > 0 && loginfo("th5: score2 - score1:", score2, score1, score2 - score1, move);
       return score2 - score1;
     }
   
@@ -701,7 +591,7 @@ function loginfo(...args) {
     }
   
     applyMoveOnState(move, state) {
-      loginfo(`${FunnyStrategy.name}: applyMoveOnState`);
+      // loginfo(`th3: applyMoveOnState`);
       const cloneState = state.clone();
       const simulator = new GameSimulator(cloneState);
       simulator.applyMove(move);
@@ -711,14 +601,14 @@ function loginfo(...args) {
   
     getAllPosibleMove(state) {
       const posibleSkillCasts = this.getAllPosibleSkillCast(state);
-      loginfo(
-        `${FunnyStrategy.name}: posibleSkillCasts`, posibleSkillCasts
-      );
+      // loginfo(
+      //   `${FunnyStrategy.name}: posibleSkillCasts`, posibleSkillCasts
+      // );
   
       const posibleGemSwaps = this.getAllPosibleGemSwap(state);
-      loginfo(
-        `${FunnyStrategy.name}: posibleGemSwaps`, posibleGemSwaps
-      );
+      // loginfo(
+      //   `${FunnyStrategy.name}: posibleGemSwaps`, posibleGemSwaps
+      // );
   
       return [...posibleSkillCasts, ...posibleGemSwaps];
     }
@@ -727,19 +617,19 @@ function loginfo(...args) {
       const currentPlayer = state.getCurrentPlayer();
       const castableHeros = currentPlayer.getCastableHeros();
     
-      loginfo(`${FunnyStrategy.name}: castableHeros ${castableHeros.length}`);
+      // loginfo(`${FunnyStrategy.name}: castableHeros ${castableHeros.length}`);
   
       const posibleCastOnHeros = castableHeros.map((hero) =>
         this.posibleCastOnHero(hero, state)
       );
-      loginfo(
-        `${FunnyStrategy.name}: posibleCastOnHeros ${posibleCastOnHeros.length}`
-      );
+      // loginfo(
+      //   `${FunnyStrategy.name}: posibleCastOnHeros ${posibleCastOnHeros.length}`
+      // );
   
       const allPosibleCasts = [].concat(...posibleCastOnHeros);
-      loginfo(
-        `${FunnyStrategy.name}: allPosibleCasts ${allPosibleCasts.length}`
-      );
+      // loginfo(
+      //   `${FunnyStrategy.name}: allPosibleCasts ${allPosibleCasts.length}`
+      // );
   
       return allPosibleCasts;
     }
@@ -751,12 +641,12 @@ function loginfo(...args) {
   
     getAllPosibleGemSwap(state) {
       const allPosibleSwaps = state.grid.suggestMatch();
-      loginfo(
-        `${FunnyStrategy.name}: allPosibleSwaps ${allPosibleSwaps.length}`
-      );
+      // loginfo(
+      //   `${FunnyStrategy.name}: allPosibleSwaps ${allPosibleSwaps.length}`
+      // );
   
-      const allSwapMove = allPosibleSwaps.map((swap) => new AotSwapGem(swap));
-      loginfo(`${FunnyStrategy.name}: allSwapMove ${allSwapMove.length}`);
+      const allSwapMove = allPosibleSwaps.map((swap) => new AotSwapGem(swap.clone()));
+      // loginfo(`${FunnyStrategy.name}: allSwapMove ${allSwapMove.length}`);
   
       return allSwapMove;
     }
@@ -769,7 +659,6 @@ function loginfo(...args) {
       this.castSkillHandle = callback;
     }
   }
-  loginfo('th3: FunnyStrategy.name', window.strategies, FunnyStrategy.name);
   window.strategies = {
     ...(window.strategies || {}),
     [FunnyStrategy.name]: FunnyStrategy,

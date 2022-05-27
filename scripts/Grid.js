@@ -25,7 +25,7 @@ class Grid {
 
             this.gemTypes.add(gem.type);
 
-            // console.log(i + ": " + gem.type)
+            // console.log("th3: gem", gem, gemModifiers)
         }
     }
 
@@ -124,11 +124,17 @@ class Grid {
         this.swap(currentGem, swapGem);
 
         let matchGems = this.matchesAt(parseInt(currentGem.x), parseInt(currentGem.y));
-
         this.swap(currentGem, swapGem);
 
         if (matchGems.size > 0) {
-            listMatchGem.push(new GemSwapInfo(currentGem.index, swapGem.index, matchGems.size, currentGem.type, matchGems));
+            const maxLinearMatchSize = this.maxLinearMatch(matchGems);
+            let isExtraTurn = maxLinearMatchSize > 4;
+            // truong hop 1 co cai modifier extra
+            if (Array.from(matchGems).find(g => g.modifier == GemModifier.EXTRA_TURN)) {
+                isExtraTurn = true;
+            }
+
+            listMatchGem.push(new GemSwapInfo(currentGem.index, swapGem.index, matchGems.size, currentGem.type, matchGems, isExtraTurn));
         }
     }
 
@@ -228,9 +234,64 @@ class Grid {
         }
         if (ver.length >= 3) ver.forEach(gem => res.add(gem));
 
+        // check modifiers
+        // GemModifier.EXTRA_TURN
+        // EXTRA_TURN: 5,
+        try {
+            this.performMoreGem(res, []);// use ref
+        } catch(ex) {
+            console.warn("todo: nhieu gem no performMoreGem", ex);
+        }
+
         return res;
     }
 
+    performMoreGem(res, explodeGem) {// ref 
+        const resArray = Array.from(res);
+        const newSetGem = new Set();
+        for (const item of resArray) {
+            if (item.modifier == GemModifier.EXPLODE_HORIZONTAL) {
+                explodeGem.push(item);
+                // get all horizontal
+                for (let index = 0; index < 8; index++) {
+                    let gem = this.gemAt(index, item.y);
+                    res.add(gem);
+                    if (!explodeGem.includes(gem)) {
+                        newSetGem.add(gem);
+                    }
+                }
+            }
+            if (item.modifier == GemModifier.EXPLODE_VERTICAL) {
+                explodeGem.push(item);
+                // get all horizontal
+                for (let index = 0; index < 8; index++) {
+                    let gem = this.gemAt(item.x, index);
+                    res.add(gem);
+                    if (!explodeGem.includes(gem)) {
+                        newSetGem.add(gem);
+                    }
+                }
+            }
+            if (item.modifier == GemModifier.EXPLODE_SQUARE) {
+                explodeGem.push(item);
+                // get all horizontal
+                for (let indexX = item.x - 1; indexX <= item.x + 1; indexX++) {
+                    if (indexX < 0) continue;
+                    for (let indexY = item.y - 1; indexY <= item.y + 1; indexY++) {
+                        if (indexY < 0) continue;
+                        let gem = this.gemAt(indexX, indexY);
+                        res.add(gem);
+                        if (!explodeGem.includes(gem)) {
+                            newSetGem.add(gem);
+                        }
+                    }
+                }
+            }
+        }
+        if (newSetGem.size) {
+            this.performMoreGem(newSetGem, explodeGem);
+        }
+    }
     // Find Gem at Position (x, y)
     gemAt(x, y) {
         return this.gems.find(g => g.x === x && g.y === y)
@@ -239,7 +300,6 @@ class Grid {
     performSwap(index1, index2) {
         const currentGem = this.gems[index1];
         const swapGem = this.gems[index2];
-        console.log(currentGem, swapGem);
         this.swap(currentGem, swapGem);
         const allMatchGems = this.getAllMatches();
         const result = this.performDistinction(allMatchGems);
@@ -249,12 +309,16 @@ class Grid {
     getAllMatches() {
         const matches = [];
         for(const gem of this.gems) {
+            if (gem.type == -1) {
+                // khong biet roi gem gi
+                continue;
+            }
             const matchGems = this.matchesAt(parseInt(gem.x), parseInt(gem.y)); 
-            if(matchGems.size > 0) {
+            if(matchGems.size > 2) {
                 matches.push(matchGems);
             }
         }
-        return matches.length > 0 ? [union(matches)] : [];
+        return matches.length > 0 ? [matches[0]] : [];
     }
     
     performDistinction(allMatchGems) {
@@ -275,12 +339,17 @@ class Grid {
     distinctGemBatch(gems) {
         const removedGems = [];
         const matchSize = gems.size;
-        const maxLinearMatchSize = this.maxLinearMatch(gems);
         for(const gem of gems) {
             const removed = this.distinctGem(gem);
             removedGems.push(removed);
         }
-        const isExtraTurn = maxLinearMatchSize > 4;
+        // todo check extra
+        const maxLinearMatchSize = this.maxLinearMatch(gems);
+        let isExtraTurn = maxLinearMatchSize > 4;
+        // truong hop 1 co cai modifier extra
+        if (Array.from(gems).find(g => g.modifier == GemModifier.EXTRA_TURN)) {
+            isExtraTurn = true;
+        }
         return {
             matchSize,
             removedGems,
@@ -289,17 +358,15 @@ class Grid {
     }
 
     maxLinearMatch(gems) {
-        const matchesX = {};
+        const matches = {};
         const matchesY = {};
 
         for(const gem of gems) {
-            matchesX[gem.x] = matchesX[gem.x] ? 1 : matchesX[gem.x] + 1;  
-            matchesY[gem.y] = matchesY[gem.y] ? 1 : matchesY[gem.y] + 1;  
+            matches[gem.type] = !matches[gem.type] ? 1 : matches[gem.type] + 1;  
         }
 
-        const maxX = Math.max(...Object.values(matchesX));
-        const maxY = Math.max(...Object.values(matchesY));
-        return Math.max(maxX, maxY);
+        const maxY = Math.max(...Object.values(matches));
+        return maxY;
 
     }
 
@@ -309,28 +376,31 @@ class Grid {
     }
 
     performReshape() {
-        for(const gem of this.gems) {
+        // get min/max x 
+        for(const gem of this.gems.filter(gem => gem.removed).sort((a,b) => b.y - a.y)) {
             if(gem.removed) {
+                // day tu tren xuong 
                 const aboveGem = this.gemAt(gem.x, gem.y + 1);
                 if(!aboveGem) {
                     gem.removed = false;
                     gem.locked = true;
                     gem.type = -1;
                 } else {
-                    gem.type = aboveGem.type;
-                    gem.locked = aboveGem.locked;
-                    gem.removed = aboveGem.removed;
-                    aboveGem.removed = true;
-                    aboveGem.type = -1;
+                    // roi gem
+                    for (let indexY = gem.y; indexY < 7; indexY++) {
+                        const aboveGemTemp = this.gemAt(gem.x, indexY + 1);
+                        const currentGem = this.gemAt(gem.x, indexY);
+                        currentGem.type = aboveGemTemp.type;
+                        currentGem.locked = aboveGemTemp.locked;
+                        currentGem.removed = aboveGemTemp.removed;
+                    }
+                    const lastGem = this.gemAt(gem.x, 7);
+                    lastGem.removed = false;
+                    lastGem.locked = true;
+                    lastGem.type = -1;
                 }
             }
         }
-
-        const toRemove = this.gems.find(gem => gem.removed);
-        if(toRemove) {
-            this.performReshape();
-        }
-        return false;
     }
 
     getNumberOfGemByType(type) {
