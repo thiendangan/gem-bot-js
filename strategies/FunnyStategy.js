@@ -86,8 +86,8 @@ function loginfo(...args) {
   
   class AttackDamgeMetric extends ScaleFn {
     exec(gem, hero) {
-      let attack = hero.attack;
-      if(gem > 3) attack += 5;
+      let attack = hero.attack + (gem-3) * 5;
+      // if(gem > 3) attack += 5;
 
       return attack;
     }
@@ -387,13 +387,13 @@ function loginfo(...args) {
         return true;
       }
       // attack
-      // const damgeMetric = new AttackDamgeMetric();
-      // const attackDame = myHeroAlive.attack;//1 * damgeMetric.exec(futureState.matchSizeGem, myHeroAlive);
-      //   // nhung khong su dung trong truong hop dang co skill 
-      // if (enemyHeroAlive.hp <= attackDame && (!posibleSkillCasts || posibleSkillCasts.length == 0)) {
-      //   console.error("th5: ", attackDame, enemyHeroAlive.id, enemyHeroAlive.hp);
-      //   return false;
-      // }
+      const damgeMetric = new AttackDamgeMetric();
+      const attackDame = 1 * damgeMetric.exec(futureState.matchSizeGem, myHeroAlive);//myHeroAlive.attack;//
+        // nhung khong su dung trong truong hop dang co skill 
+      if (enemyHeroAlive.hp <= attackDame && (!posibleSkillCasts || posibleSkillCasts.length == 0)) {
+        console.error("th5: ", attackDame, enemyHeroAlive.id, enemyHeroAlive.hp, futureState.matchSizeGem);
+        return true;
+      }
 
       // let priorityHero = ['ELIZAH', 'THUNDER_GOD'];
       // if (priorityHero.includes(enemyHeroAlive.id) && enemyHeroAlive.isFullMana()) {
