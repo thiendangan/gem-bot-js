@@ -327,6 +327,10 @@ class BaseSkill {
       if (!seaGod || seaGod && seaGod.hasSkill()) {
         dontCast = false;
       }
+      if (this.hero.hp <= 12) {
+        dontCast = false;
+      }
+
       // neu buff cho ban than va co kiem de kill co the buff r dung kiem
       // kiem tra co kiem tren ban hay k
       // todo
@@ -368,7 +372,10 @@ class BaseSkill {
       if (this.hero.hp > Math.max(enemyHeroAttack, enemyMaxAttack) + 3) {
         // Chua danh chet dc
         // check xem neu minh con dmgHeros thi doi
-        if (state.getCurrentPlayer().getHerosAlive().find(h => dmgHeros.includes(h.id) && h.isAlive())) {
+        // todo bug
+        let hero = state.getCurrentPlayer().getHerosAlive()
+        .find(h => dmgHeros.includes(h.id) && h.isAlive());
+        if (hero && (hero.maxMana - hero.mana) <= 3) {
           return new SkillTarget(null, true);
         }
       }
@@ -410,24 +417,35 @@ class BaseSkill {
       const attackBuff = ["MONK", "SEA_SPIRIT"];
       // uu tien giet truoc
       let shouldKill = null;
-      let bestTake = 0;
-      let hasHeroDie = false;
+      let heroWillDie = [];
       for (const item of enemyHeroAlive) {
-        if (attackBuff.indexOf(item.id) > -1) {
-          continue;
+        let attack = item.attack + state.grid.getNumberOfGemByType(GemType.RED);
+        if (attack >= item.hp) {
+          heroWillDie.push(item);
         }
-        const attack =
-          item.attack +
-          state.grid.getNumberOfGemByType(GemType.RED) +
-          this.hero.attack; // item.attack
-        // uu tien
-        const damageTake = Math.min(attack, item.hp);
-        if (!hasHeroDie) {
-          hasHeroDie = damageTake == item.hp;
+      }
+      if (heroWillDie.length == 1) {
+        shouldKill = heroWillDie[0];
+      } else if (heroWillDie.length > 1) {
+        let currentOption = { hp: 0, item: null };
+        for(let heroTemp of heroWillDie) {
+          if (!attackBuff.includes(heroTemp.id) && heroTemp.hasSkill()) {
+            shouldKill = heroTemp;
+          } else {
+            if (currentOption.hp < heroTemp.hp) {
+              shouldKill = heroTemp;
+            }
+          }
         }
-        if (damageTake > bestTake) {
-          shouldKill = item;
-          bestTake = damageTake;
+      }
+
+      if (!shouldKill) {
+        let bestTake = 0;
+        for (const item of enemyHeroAlive) {
+          if (item.attack > bestTake) {
+            shouldKill = item;
+            bestTake = item.attack;
+          }
         }
       }
       // if (!hasHeroDie) {

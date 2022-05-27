@@ -378,6 +378,7 @@ function loginfo(...args) {
       
       return skill;
     }
+    
     shouldUseSword(posibleSkillCasts, futureState, move) {
       const myHeroAlive = futureState.getCurrentPlayer().firstHeroAlive();
       const enemyHerosAlive = futureState.getCurrentEnemyPlayer().getHerosAlive();
