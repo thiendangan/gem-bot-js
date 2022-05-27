@@ -410,6 +410,13 @@ class BaseSkill {
         (fireSprit.attack + currentRedGem) >= seaGod.hp && seaGod.mana < 6) {// kha nang bi target cao
         return 10.04;
       }
+      // seasprit
+      let heroAllAttack = state.getCurrentEnemyPlayer().getHerosAlive().find(h => ['AIR_SPIRIT', 'SEA_GOD', 'MERMAID', 'CERBERUS'].includes(h.id));
+      if (heroAllAttack && heroAllAttack.hasSkill() &&
+          enemyMaxAttack >= heroAllAttack.hp) {// kha nang bi target cao
+
+        return 10.04;
+      }
       
       return 10.01;
     }
