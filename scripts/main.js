@@ -34,11 +34,12 @@ var enemyPlayer;
 var currentPlayerId;
 var grid;
 
-const username = "5aesieunhan";
+const username = "thien.dang";
+const nickName = "5aesieunhan";
 const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzI4MjczNTcxNSwiZXhwIjoxNjU1MDgyNzM1fQ.hcScupwBmebBrdTXUNFwQes1Ba1k91PDdqmJvG2N4GVU2G28YhmTyXBoHIiy7loR6Pw-eLWiMaN9-gm-CiINqA";
 const tokenMap = {
 	"5aesieunhan": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI1YWVzaWV1bmhhbiIsImF1dGgiOiJST0xFX1VTRVIiLCJMQVNUX0xPR0lOX1RJTUUiOjE2NTM0ODkxNzA5MjUsImV4cCI6MTY1NTI4OTE3MH0.joDiOlGEkKDjgz9gO32tXS9VSGHbJl7oOvWSkEVzdbPDhiQR51cIjOWN1V1oKTYm9chzQ_Bv-VxjQMHzsahPKQ",
-	"thien.dang": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzQwODEwMTA2OCwiZXhwIjoxNjU1MjA4MTAxfQ.cUBGnEfomzkvsRhS5raC6MdF-wlrAIynodkLMrr9vCiKOa4d-4vTtJE6jMKnJx7u7U7EVKawWHqCxJBNxXDPbg",
+	"thien.dang": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aGllbi5kYW5nIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzYxMjQ1ODk5OSwiZXhwIjoxNjU1NDEyNDU4fQ.vv5wt44A13UzBAkqoTdxKSV2MeTR8odvQELI5f85K03II2mP4tVU1xmunWPBBYPThOkU-KFp-F6DpMX3I_1w5g",
 	"duy.nguyenvan": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkdXkubmd1eWVudmFuIiwiYXV0aCI6IlJPTEVfVVNFUiIsIkxBU1RfTE9HSU5fVElNRSI6MTY1MzMxNTY4NTc5NywiZXhwIjoxNjU1MTE1Njg1fQ.rnXFlX7rY8AMp6wSWkeyYphl0Ia9eGmD9LtM4gzWmKv8Cp5RWqzQhvZT0XHglrVc9Pe7PTqbZ7Xl6rnJF71sQA"
 };
 var visualizer = new Visualizer({ el: '#visual' });
@@ -188,7 +189,7 @@ function onLoginBtnClick() {
 	let data = new SFS2X.SFSObject();
 	data.putUtfString("BATTLE_MODE", "NORMAL");
 	data.putUtfString("ID_TOKEN", tokenMap[uName]);
-	data.putUtfString("NICK_NAME", uName);
+	data.putUtfString("NICK_NAME", nickName);
 
 	var isSent = sfs.send(new SFS2X.LoginRequest(uName, "", data, "gmm"));
 
