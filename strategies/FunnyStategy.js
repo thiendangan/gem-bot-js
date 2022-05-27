@@ -380,16 +380,26 @@ function loginfo(...args) {
     }
     
     shouldUseSword(posibleSkillCasts, futureState, move) {
+      let swords = Array.from(move.swap.matchGems).filter(g => g.type == GemType.SWORD);
+      if (!swords || swords.length < 3) {
+        return false;
+      }
       const myHeroAlive = futureState.getCurrentPlayer().firstHeroAlive();
       const enemyHerosAlive = futureState.getCurrentEnemyPlayer().getHerosAlive();
       let enemyHeroAlive = enemyHerosAlive[0];
-      if (enemyHerosAlive.length == 1 && myHeroAlive.attack > enemyHerosAlive[0].hp/2) {
+      if (enemyHerosAlive.length == 1 && myHeroAlive.attack >= enemyHerosAlive[0].hp/2) {
         console.warn("cons 1 con");
         return true;
       }
+      let matchSizeGem = swords.length;
+
+      // if (futureState.matchSizeGem > 4) {// truong hop hon 5 1 turn thi vao bonus
+      //   // truong hop vao kiem turn sau// todo dang k tinh dc
+      //   return false;
+      // }
       // attack
       const damgeMetric = new AttackDamgeMetric();
-      const attackDame = 1 * damgeMetric.exec(futureState.matchSizeGem, myHeroAlive);//myHeroAlive.attack;//
+      const attackDame = 1 * damgeMetric.exec(matchSizeGem, myHeroAlive);//myHeroAlive.attack;//
         // nhung khong su dung trong truong hop dang co skill 
       if (enemyHeroAlive.hp <= attackDame && (!posibleSkillCasts || posibleSkillCasts.length == 0)) {
         console.error("th5: ", attackDame, enemyHeroAlive.id, enemyHeroAlive.hp, futureState.matchSizeGem);
