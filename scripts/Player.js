@@ -24,7 +24,20 @@ class Player
         const heros = this.getHerosAlive();
         return Math.max(...heros.map(h => h.attack));
     }
-
+    getCurrentMax() {
+        const heros = this.getHerosAlive();
+        let hp = 0;
+        let attack = 0;
+        for (let hero of heros) {
+            if (hero.attack > attack) {
+                attack = hero.attack;
+            }
+            if (hero.hp > hp) {
+                hp = hero.hp;
+            }
+        }
+        return {hp, attack};
+    }
     getCastableHeros() {
         let arr = this.heroes.filter(hero => hero.isAlive() && hero.isFullMana());
         return arr;

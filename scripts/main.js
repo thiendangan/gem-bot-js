@@ -403,7 +403,7 @@ function StartTurn(param) {
 			SendSwapGem()
 		}
 
-	}, delaySwapGem + 300);
+	}, delaySwapGem);
 	StartTurnCount++;
 }
 
