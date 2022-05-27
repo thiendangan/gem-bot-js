@@ -390,6 +390,27 @@ class BaseSkill {
 
   class FIRE_SPIRIT_SKILL extends BaseSkill {
     getScore(state) {
+      let heros = state.getCurrentPlayer().getHerosAlive()
+      // neu con bo chet thi uu tien
+      let seaGod = heros.find(h => h.id == 'SEA_GOD');
+      if (!seaGod) {
+        return 10.025;
+      }
+
+      //FIRE_SPIRIT
+      // neu con bo chet thi uu tien
+      let herosEnemy = state.getCurrentEnemyPlayer().getHerosAlive()
+      let fireSprit = herosEnemy.find(h => h.id == 'FIRE_SPIRIT');
+      let currentRedGem = state.grid.getNumberOfGemByType(GemType.RED);
+      if (fireSprit && fireSprit.hasSkill() &&
+        (fireSprit.attack + currentRedGem) >= seaGod.hp) {// kha nang bi target cao
+        return 10.04;
+      }
+      if (fireSprit && fireSprit.mana >= 3  &&
+        (fireSprit.attack + currentRedGem) >= seaGod.hp && seaGod.mana < 6) {// kha nang bi target cao
+        return 10.04;
+      }
+      
       return 10.01;
     }
     applySkill(state) {
@@ -442,7 +463,7 @@ class BaseSkill {
       if (!shouldKill) {
         let bestTake = 0;
         for (const item of enemyHeroAlive) {
-          if (item.attack > bestTake) {
+          if ((item.attack + item.mana/item.maxMana) > bestTake) {
             shouldKill = item;
             bestTake = item.attack;
           }
