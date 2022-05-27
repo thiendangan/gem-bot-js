@@ -375,8 +375,9 @@ function SendFinishTurn(isFirstTurn) {
 
 }
 
-
+var StartTurnCount = 1;
 function StartTurn(param) {
+	console.log("th10: on start StartTurn", StartTurnCount, new Date());
 	currentPlayerId = param.getInt("currentPlayerId");
 	visualizer.snapShot();
 
@@ -385,27 +386,30 @@ function StartTurn(param) {
 			trace("not isBotTurn");
 			return;
 		}
+		console.log("th10: start StartTurn", StartTurnCount, new Date());
 
-		if (strategy) {
-			strategy.playTurn();
-			return;
+		try {
+			if (strategy) {
+				strategy.playTurn();
+				return;
+			}
+		} catch(ex) {
+			console.error(ex, "the big error");
 		}
 		let heroFullMana = botPlayer.anyHeroFullMana();
 		if (heroFullMana != null) {
-			console.log("th3: SendCastSkill", heroFullMana);
 			SendCastSkill(heroFullMana)
 		} else {
 			SendSwapGem()
 		}
 
-	}, delaySwapGem);
+	}, delaySwapGem + 300);
+	StartTurnCount++;
 }
 
 function isBotTurn() {
 	return botPlayer.playerId == currentPlayerId;
 }
-
-
 
 function SendCastSkill(heroCastSkill, { targetId, selectedGem, gemIndex, isTargetAllyOrNot } = {}) {
 	var data = new SFS2X.SFSObject();
@@ -491,7 +495,7 @@ function HandleGems(paramz) {
 	console.log("gemModifiers : ", gemModifiers);
 
 	grid.updateGems(gemCode, gemModifiers);
-
+	console.log("th10: done update", new Date());
 	setTimeout(function () { SendFinishTurn(false) }, delaySwapGem);
 }
 

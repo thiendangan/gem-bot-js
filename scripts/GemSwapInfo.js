@@ -18,7 +18,6 @@ class GemSwapInfo {
     }
     hasADGem() {
         for (let item of Array.from(this.matchGems)) {
-            console.log("th3: itemitem", item);
             // if (item.modifier > 4) {
             //     return true;
             // } else if (item.modifier > 0 && this.matchGems.size > 3) {

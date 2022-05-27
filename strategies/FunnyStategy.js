@@ -1,5 +1,5 @@
 function loginfo(...args) {
-    console.log('aot: ', ...args);
+    // console.log('aot: ', ...args);
   }
   class AotGameState {
     constructor({ game, grid, botPlayer, enemyPlayer }) {
@@ -258,7 +258,7 @@ function loginfo(...args) {
       const skillScore = hero.skill().getScore(state);
       // loginfo('th3: skillScore', hero.id, skillScore);
       // ??? mana = 0
-      console.log("th6: ", hero.mana, hero.maxMana, skillScore, hero.id, hero.mana * skillScore);
+      // console.log("th6: ", hero.mana, hero.maxMana, skillScore, hero.id, hero.mana * skillScore);
       return (hero.mana + 0.1/hero.maxMana) * skillScore;
     }
 
@@ -383,17 +383,17 @@ function loginfo(...args) {
       const enemyHerosAlive = futureState.getCurrentEnemyPlayer().getHerosAlive();
       let enemyHeroAlive = enemyHerosAlive[0];
       if (enemyHerosAlive.length == 1 && myHeroAlive.attack > enemyHerosAlive[0].hp/2) {
-        console.error("th5: cons 1 con");
+        console.warn("cons 1 con");
         return true;
       }
       // attack
       // const damgeMetric = new AttackDamgeMetric();
-      const attackDame = myHeroAlive.attack;//1 * damgeMetric.exec(futureState.matchSizeGem, myHeroAlive);
-        // nhung khong su dung trong truong hop dang co skill 
-      if (enemyHeroAlive.hp <= attackDame && (!posibleSkillCasts || posibleSkillCasts.length == 0)) {
-        console.error("th5: ", attackDame, enemyHeroAlive.id, enemyHeroAlive.hp);
-        return false;
-      }
+      // const attackDame = myHeroAlive.attack;//1 * damgeMetric.exec(futureState.matchSizeGem, myHeroAlive);
+      //   // nhung khong su dung trong truong hop dang co skill 
+      // if (enemyHeroAlive.hp <= attackDame && (!posibleSkillCasts || posibleSkillCasts.length == 0)) {
+      //   console.error("th5: ", attackDame, enemyHeroAlive.id, enemyHeroAlive.hp);
+      //   return false;
+      // }
 
       // let priorityHero = ['ELIZAH', 'THUNDER_GOD'];
       // if (priorityHero.includes(enemyHeroAlive.id) && enemyHeroAlive.isFullMana()) {
@@ -405,7 +405,7 @@ function loginfo(...args) {
     chooseBestPosibleMove(state, deep = 2, isIncludeEnemy = false) {
       const posibleGemSwaps = this.getAllPosibleGemSwap(state);
       const posibleSkillCasts = this.getAllPosibleSkillCast(state);
-      try {
+      // try {
         // 1 so truong hop loi the thi ve an gems
         for (const move of posibleGemSwaps) {
           const cloneState = state.clone();
@@ -413,7 +413,7 @@ function loginfo(...args) {
           // neu enemy chet het thi return luon skill
           // todo refactor dup code
           if (futureState.isEnemyPlayerDie()) {
-            console.log("th4: chooseBestPosibleMove all die");
+            // console.log("th4: chooseBestPosibleMove all die");
             return move;
           }
 
@@ -439,7 +439,6 @@ function loginfo(...args) {
         // should remove
         let currentBestMove = posibleGemSwaps[0];//todo get best
         let currentBestMoveScore = -1;
-        loginfo('th3: posibleMoves', posibleGemSwaps);
         let listFutureState = [];
         for (const move of posibleGemSwaps) {
           const cloneState = state.clone();
@@ -457,7 +456,6 @@ function loginfo(...args) {
         }
         const listSolutions = listFutureState.filter(l => l.simulateMoveScore == currentBestMoveScore);
 
-        console.log("th8: currentBestMoveScore", currentBestMoveScore, listSolutions);
         // truong hop currentBestMoveScore co nhieu lua chon
         // tinh toan ti le gio han doi phuong
         if (isIncludeEnemy) {
@@ -485,14 +483,14 @@ function loginfo(...args) {
         }
 
         return currentBestMove;
-      } catch(ex) {
-        console.error("big error", ex);
-        if (posibleSkillCasts && posibleSkillCasts.length) {
-          return posibleSkillCasts[0];
-        }
+      // } catch(ex) {
+      //   console.error("big error", ex);
+      //   if (posibleSkillCasts && posibleSkillCasts.length) {
+      //     return posibleSkillCasts[0];
+      //   }
 
-        return posibleGemSwaps[posibleGemSwaps.length - 1];
-      }
+      //   return posibleGemSwaps[posibleGemSwaps.length - 1];
+      // }
     }
   
     getBestMoveWithEnemyAdvantage(listState) {
@@ -518,7 +516,7 @@ function loginfo(...args) {
       let currentBestMoveScore = -1;
       for (const move of posibleGemSwaps) {
         if (!move) {
-          console.log("th4: move warning null");
+          console.warn("move warning null");
           continue;
         }
         const futureState = this.applyMoveOnState(move, state);
@@ -540,13 +538,11 @@ function loginfo(...args) {
         return state;
       }
       if (state.isEnemyPlayerDie()) {
-        console.log("th4: seeFutureState all die enemyHeroAlive1");
         return state;
       }
 
       const futureState = this.applyMoveOnState(move, state);
       if (futureState.isEnemyPlayerDie()) {
-        console.log("th4: seeFutureState all die");
         return futureState;
       }
 
@@ -652,7 +648,6 @@ function loginfo(...args) {
       this.castSkillHandle = callback;
     }
   }
-  loginfo('th3: FunnyStrategy.name', window.strategies, FunnyStrategy.name);
   window.strategies = {
     ...(window.strategies || {}),
     [FunnyStrategy.name]: FunnyStrategy,

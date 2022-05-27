@@ -101,7 +101,7 @@ class Hero {
 
     buffMana(value) {
       this.mana += value;
-      console.log("th7: ssds", value, this.id, this.mana);
+      // console.log("th7: ssds", value, this.id, this.mana);
     }
 
     buffHp(value) {

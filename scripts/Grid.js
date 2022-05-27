@@ -207,9 +207,7 @@ class Grid {
             xRight++;
         }
         if (hor.length >= 3) hor.forEach(gem => res.add(gem));
-        if (hor.length > 3) {
-            console.log("th3: hor.length > 3");
-        }
+
         // check vertically
         let ver = [];
         ver.push(center);
@@ -235,14 +233,12 @@ class Grid {
             yAbove++;
         }
         if (ver.length >= 3) ver.forEach(gem => res.add(gem));
-        if (ver.length > 3) {
-            console.log("th3: ver.length > 3");
-        }
+
         // check modifiers
         // GemModifier.EXTRA_TURN
         // EXTRA_TURN: 5,
         try {
-            this.performMoreGem(res);// use ref
+            this.performMoreGem(res, []);// use ref
         } catch(ex) {
             console.warn("todo: nhieu gem no performMoreGem", ex);
         }
@@ -250,35 +246,34 @@ class Grid {
         return res;
     }
 
-    performMoreGem(res) {// ref 
+    performMoreGem(res, explodeGem) {// ref 
         const resArray = Array.from(res);
         const newSetGem = new Set();
         for (const item of resArray) {
-            if (!item) {
-                debugger;
-                console.error("tai sao")
-            }
             if (item.modifier == GemModifier.EXPLODE_HORIZONTAL) {
+                explodeGem.push(item);
                 // get all horizontal
                 for (let index = 0; index < 8; index++) {
                     let gem = this.gemAt(index, item.y);
                     res.add(gem);
-                    if (item != gem) {
+                    if (!explodeGem.includes(gem)) {
                         newSetGem.add(gem);
                     }
                 }
             }
             if (item.modifier == GemModifier.EXPLODE_VERTICAL) {
+                explodeGem.push(item);
                 // get all horizontal
                 for (let index = 0; index < 8; index++) {
                     let gem = this.gemAt(item.x, index);
                     res.add(gem);
-                    if (item != gem) {
+                    if (!explodeGem.includes(gem)) {
                         newSetGem.add(gem);
                     }
                 }
             }
             if (item.modifier == GemModifier.EXPLODE_SQUARE) {
+                explodeGem.push(item);
                 // get all horizontal
                 for (let indexX = item.x - 1; indexX <= item.x + 1; indexX++) {
                     if (indexX < 0) continue;
@@ -286,7 +281,7 @@ class Grid {
                         if (indexY < 0) continue;
                         let gem = this.gemAt(indexX, indexY);
                         res.add(gem);
-                        if (item != gem) {
+                        if (!explodeGem.includes(gem)) {
                             newSetGem.add(gem);
                         }
                     }
@@ -294,7 +289,7 @@ class Grid {
             }
         }
         if (newSetGem.size) {
-            this.performMoreGem(newSetGem);
+            this.performMoreGem(newSetGem, explodeGem);
         }
     }
     // Find Gem at Position (x, y)
