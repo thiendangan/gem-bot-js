@@ -287,7 +287,7 @@ function loginfo(...args) {
     calc(state) {
       // loginfo("th3: move.swap.sizeMatch/20", move.swap.sizeMatch/20);
       let myScore = this.calcScoreOfPlayer(state.getCurrentPlayer(), state);
-      // myScore += (state.matchSizeGem||0)/100;// neu state sau co luong remove cao hon thi cong diem
+      myScore += (state.matchSizeGem||0)/100;// neu state sau co luong remove cao hon thi cong diem
       const enemyScore = this.calcScoreOfPlayer(state.getCurrentEnemyPlayer(), state);
   
       const score = myScore - enemyScore;
