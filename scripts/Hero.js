@@ -335,7 +335,8 @@ class SEA_SPIRIT_SKILL extends BaseSkill {
       return new SkillTarget(hero, dontCast);
     }
     // neu chet o turn tiep theo thi cast
-    var enemyHero = enemyPlayer.getHerosAlive().find(h => h.id == 'FIRE_SPIRIT');
+    let enemyPlayerHeros = enemyPlayer.getHerosAlive();
+    var enemyHero = enemyPlayerHeros.find(h => h.id == 'FIRE_SPIRIT');
     let enemySpritAttack = 0;
     // todo
     if (!enemyHero) {// truong hop xau con seasprit// todo
@@ -356,7 +357,12 @@ class SEA_SPIRIT_SKILL extends BaseSkill {
     // neu buff cho ban than va co kiem de kill co the buff r dung kiem
     // kiem tra co kiem tren ban hay k
     // todo
-
+    // doi SEA_GOD co skill r ms buff or da chet
+    let seaGodEnemy = enemyPlayerHeros.find(h => h.id == 'SEA_GOD');
+    if (seaGodEnemy && seaGodEnemy.hasSkill()) {
+      dontCast = false;
+      return new SkillTarget(hero, dontCast);
+    }
 
     return new SkillTarget(hero, dontCast);
   }
