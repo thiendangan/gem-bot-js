@@ -308,6 +308,7 @@ class Grid {
     
     getAllMatches() {
         const matches = [];
+        const conditions = [];
         for(const gem of this.gems) {
             if (gem.type == -1) {
                 // khong biet roi gem gi
@@ -315,10 +316,14 @@ class Grid {
             }
             const matchGems = this.matchesAt(parseInt(gem.x), parseInt(gem.y)); 
             if(matchGems.size > 2) {
-                matches.push(matchGems);
+                let tempValue = matchGems.map(g => gem.index).sort((a, b)=> a -b).join("-");
+                if (!conditions.includes(tempValue)) {
+                    matches.push(matchGems);
+                    conditions.push(tempValue);
+                }
             }
         }
-        return matches.length > 0 ? [matches[0]] : [];
+        return matches;
     }
     
     performDistinction(allMatchGems) {
@@ -344,7 +349,7 @@ class Grid {
             removedGems.push(removed);
         }
         // todo check extra
-        const maxLinearMatchSize = this.maxLinearMatch(gems);
+        const maxLinearMatchSize = gems.length;
         let isExtraTurn = maxLinearMatchSize > 4;
         // truong hop 1 co cai modifier extra
         if (Array.from(gems).find(g => g.modifier == GemModifier.EXTRA_TURN)) {

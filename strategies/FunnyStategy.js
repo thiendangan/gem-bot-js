@@ -287,7 +287,7 @@ function loginfo(...args) {
     calc(state) {
       // loginfo("th3: move.swap.sizeMatch/20", move.swap.sizeMatch/20);
       let myScore = this.calcScoreOfPlayer(state.getCurrentPlayer(), state);
-      myScore += (state.matchSizeGem||0)/100;// neu state sau co luong remove cao hon thi cong diem
+      // myScore += (state.matchSizeGem||0)/100;// neu state sau co luong remove cao hon thi cong diem
       const enemyScore = this.calcScoreOfPlayer(state.getCurrentEnemyPlayer(), state);
   
       const score = myScore - enemyScore;
@@ -422,16 +422,15 @@ function loginfo(...args) {
           const cloneState = state.clone();
           const futureState = this.seeFutureState(move, cloneState, deep);
           // neu enemy chet het thi return luon skill
-          // todo refactor dup code
+          if (futureState.isExtraTurn || futureState.preIsExtraTurn) {
+            return move;
+          }
+          
           if (futureState.isEnemyPlayerDie()) {
             // console.log("th4: chooseBestPosibleMove all die");
             return move;
           }
 
-          if (futureState.isExtraTurn || futureState.preIsExtraTurn) {
-            return move;
-          }
-          
           if (this.shouldUseSword(posibleSkillCasts, futureState, move)) {
             return move;
           }
@@ -562,7 +561,7 @@ function loginfo(...args) {
       //   return this.seeFutureState(newMove.clone(), futureState, deep);
       // }
       const newMove = this.chooseBestPosibleMove(futureState, deep - 1);
-      if (state.isExtraTurn) {// todo check
+      if (state.isExtraTurn || futureState.preIsExtraTurn) {// todo check
         futureState.preIsExtraTurn = true;
       }
       return this.seeFutureState(newMove, futureState, deep - 1);
