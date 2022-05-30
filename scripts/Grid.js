@@ -316,7 +316,7 @@ class Grid {
             }
             const matchGems = this.matchesAt(parseInt(gem.x), parseInt(gem.y)); 
             if(matchGems.size > 2) {
-                let tempValue = matchGems.map(g => gem.index).sort((a, b)=> a -b).join("-");
+                let tempValue = matchGems.map(g => gem.index).sort((a, b)=> a.index - b.index).join("-");
                 if (!conditions.includes(tempValue)) {
                     matches.push(matchGems);
                     conditions.push(tempValue);
